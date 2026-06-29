@@ -7,6 +7,18 @@
 .buildlog/
 .history
 
+# Sensitive files - Firebase
+**/google-services.json
+**/GoogleService-Info.plist
+
+# Agent workspace
+.agent/
+*.log
+*.pyc
+*.swp
+.buildlog/
+.history
+
 
 
 # Flutter repo-specific

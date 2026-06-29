@@ -1,0 +1,44 @@
+name: simple_quizlet_mobile_app
+description: "Simple Quizlet - Ứng dụng học từ vựng tiếng Anh"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.7.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # Firebase
+  firebase_core: ^3.6.0
+  cloud_firestore: ^5.4.4
+  firebase_auth: ^5.3.1
+
+  # State Management
+  flutter_bloc: ^9.1.0
+  equatable: ^2.0.7
+
+  # DI
+  get_it: ^8.0.3
+
+  # Navigation
+  go_router: ^14.8.0
+
+  # Storage
+  shared_preferences: ^2.5.2
+
+  # Logging
+  logger: ^2.5.0
+
+  # Utilities
+  intl: ^0.20.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true

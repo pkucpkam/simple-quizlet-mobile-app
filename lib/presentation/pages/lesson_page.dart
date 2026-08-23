@@ -26,13 +26,15 @@ class _LessonPageState extends State<LessonPage> {
       builder: (context, state) {
         if (state is LessonLoading) {
           return Scaffold(
-            appBar: AppBar(),
-            body: const Center(child: CircularProgressIndicator(color: AppTheme.accentColor)),
+            backgroundColor: AppTheme.bgColor,
+            appBar: AppBar(backgroundColor: AppTheme.bgColor),
+            body: const Center(child: CircularProgressIndicator()),
           );
         }
         if (state is LessonError) {
           return Scaffold(
-            appBar: AppBar(),
+            backgroundColor: AppTheme.bgColor,
+            appBar: AppBar(backgroundColor: AppTheme.bgColor),
             body: Center(child: Text('Lỗi: ${state.message}', style: AppTheme.bodyMd)),
           );
         }
@@ -41,93 +43,135 @@ class _LessonPageState extends State<LessonPage> {
           final vocab = lesson.vocabulary ?? [];
 
           return Scaffold(
+            backgroundColor: AppTheme.bgColor,
             body: CustomScrollView(
               slivers: [
-                // Gradient Header
+                // ── Gradient Header ───────────────────────────
                 SliverAppBar(
-                  expandedHeight: 200,
+                  expandedHeight: 210,
                   pinned: true,
-                  backgroundColor: AppTheme.surfaceColor,
+                  backgroundColor: AppTheme.bgColor,
                   leading: IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new, size: 18),
-                    color: AppTheme.textColor,
+                    icon: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surface2Color.withValues(alpha: 0.85),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.arrow_back_ios_new, size: 16, color: AppTheme.textColor),
+                    ),
                     onPressed: () => context.pop(),
                   ),
                   flexibleSpace: FlexibleSpaceBar(
                     background: Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
                           colors: lesson.isOfficial
-                              ? [AppTheme.surface2Color, AppTheme.bgColor]
-                              : [AppTheme.accentColor.withValues(alpha: 0.12), AppTheme.bgColor],
+                              ? [
+                                  AppTheme.accentColor.withValues(alpha: 0.18),
+                                  AppTheme.bgColor,
+                                ]
+                              : [
+                                  AppTheme.infoColor.withValues(alpha: 0.15),
+                                  AppTheme.bgColor,
+                                ],
                         ),
                       ),
                       child: SafeArea(
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 56, 16, 16),
+                          padding: const EdgeInsets.fromLTRB(16, 56, 16, 20),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+                                  // Album art style icon
                                   Container(
-                                    width: 52,
-                                    height: 52,
+                                    width: 60,
+                                    height: 60,
                                     decoration: BoxDecoration(
-                                      color: AppTheme.accentColor.withValues(alpha: 0.2),
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: lesson.isOfficial
+                                            ? [
+                                                AppTheme.accentColor.withValues(alpha: 0.8),
+                                                AppTheme.accentDark,
+                                              ]
+                                            : [
+                                                AppTheme.infoColor.withValues(alpha: 0.8),
+                                                const Color(0xFF1D4ED8),
+                                              ],
+                                      ),
                                       borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                                      border: Border.all(color: AppTheme.accentColor.withValues(alpha: 0.3)),
+                                      boxShadow: AppTheme.shadowHeavy,
                                     ),
                                     child: const Center(
-                                      child: Icon(Icons.menu_book_rounded, color: AppTheme.accentColor, size: 26),
+                                      child: Icon(Icons.menu_book_rounded, color: Colors.white, size: 28),
                                     ),
                                   ),
-                                  const SizedBox(width: 14),
+                                  const SizedBox(width: 16),
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(lesson.title,
-                                                  style: AppTheme.titleLg, maxLines: 2, overflow: TextOverflow.ellipsis),
-                                            ),
-                                            if (lesson.isOfficial)
-                                              Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                decoration: BoxDecoration(
-                                                  color: AppTheme.accentColor.withValues(alpha: 0.2),
-                                                  borderRadius: BorderRadius.circular(4),
-                                                ),
-                                                child: Text('Official',
-                                                    style: const TextStyle(fontSize: 10, color: AppTheme.accentColor, fontWeight: FontWeight.w600)),
+                                        if (lesson.isOfficial)
+                                          Padding(
+                                            padding: const EdgeInsets.only(bottom: 6),
+                                            child: Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                              decoration: AppTheme.pillDecoration(
+                                                background: AppTheme.accentColor.withValues(alpha: 0.15),
+                                                border: AppTheme.accentDark.withValues(alpha: 0.4),
                                               ),
-                                          ],
+                                              child: Text(
+                                                'OFFICIAL',
+                                                style: AppTheme.labelSm.copyWith(
+                                                  color: AppTheme.accentColor,
+                                                  fontSize: 9,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        Text(
+                                          lesson.title,
+                                          style: AppTheme.titleLg,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                         const SizedBox(height: 4),
-                                        Text(lesson.description.isEmpty
-                                            ? 'Khám phá từ vựng tiếng Anh'
-                                            : lesson.description,
-                                            style: AppTheme.bodyMd, maxLines: 2, overflow: TextOverflow.ellipsis),
+                                        Text(
+                                          lesson.description.isEmpty
+                                              ? 'Khám phá từ vựng tiếng Anh'
+                                              : lesson.description,
+                                          style: AppTheme.bodyMd,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                         const SizedBox(height: 4),
-                                        Text('Tạo bởi: ${lesson.creator}', style: AppTheme.bodySm),
+                                        Text('by ${lesson.creator}', style: AppTheme.bodySm),
                                       ],
                                     ),
                                   ),
+                                  // Word count badge
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                                     decoration: BoxDecoration(
-                                      color: AppTheme.textColor.withValues(alpha: 0.06),
-                                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                                      color: AppTheme.surface2Color,
+                                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                                      border: Border.all(color: AppTheme.borderColor, width: 0.8),
                                     ),
                                     child: Column(
                                       children: [
-                                        Text('${lesson.wordCount}',
-                                            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.textColor)),
-                                        Text('từ', style: AppTheme.bodySm.copyWith(fontSize: 10, color: AppTheme.text2Color)),
+                                        Text(
+                                          '${lesson.wordCount}',
+                                          style: AppTheme.displayMd.copyWith(fontSize: 24),
+                                        ),
+                                        Text('từ', style: AppTheme.bodySm.copyWith(fontSize: 10)),
                                       ],
                                     ),
                                   ),
@@ -141,57 +185,49 @@ class _LessonPageState extends State<LessonPage> {
                   ),
                 ),
 
-                // Action Buttons
+                // ── Action Buttons ────────────────────────────
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppTheme.surfaceColor,
-                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                        border: Border.all(color: AppTheme.borderColor),
-                      ),
-                      child: Row(
-                        children: [
-                          _ActionButton(
-                            label: 'Flashcard',
-                            icon: Icons.layers_outlined,
-                            color: const Color(0xFF2563EB),
-                            onTap: () => context.push('/study/${lesson.id}'),
-                          ),
-                          const SizedBox(width: 8),
-                          _ActionButton(
-                            label: 'Ôn tập',
-                            icon: Icons.menu_book_outlined,
-                            color: AppTheme.successColor,
-                            onTap: () => context.push('/review/${lesson.id}'),
-                          ),
-                          const SizedBox(width: 8),
-                          _ActionButton(
-                            label: 'Kiểm tra',
-                            icon: Icons.edit_note_outlined,
-                            color: AppTheme.accentColor,
-                            onTap: () => context.push('/test/${lesson.id}'),
-                          ),
-                        ],
-                      ),
+                    child: Row(
+                      children: [
+                        _ActionButton(
+                          label: 'FLASHCARD',
+                          icon: Icons.layers_outlined,
+                          color: AppTheme.infoColor,
+                          onTap: () => context.push('/study/${lesson.id}'),
+                        ),
+                        const SizedBox(width: 10),
+                        _ActionButton(
+                          label: 'ÔN TẬP',
+                          icon: Icons.menu_book_outlined,
+                          color: AppTheme.accentColor,
+                          onTap: () => context.push('/review/${lesson.id}'),
+                        ),
+                        const SizedBox(width: 10),
+                        _ActionButton(
+                          label: 'THI',
+                          icon: Icons.edit_note_outlined,
+                          color: AppTheme.warningColor,
+                          onTap: () => context.push('/test/${lesson.id}'),
+                        ),
+                      ],
                     ),
                   ),
                 ),
 
-                // Vocabulary Table Header
+                // ── Vocab Header ──────────────────────────────
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
                     child: Text(
-                      'DANH SÁCH TỪ VỰNG (${vocab.length})',
+                      'TỪ VỰNG (${vocab.length})',
                       style: AppTheme.labelMd,
                     ),
                   ),
                 ),
 
-                // Vocabulary list
+                // ── Vocabulary list ───────────────────────────
                 SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
@@ -204,7 +240,7 @@ class _LessonPageState extends State<LessonPage> {
                     childCount: vocab.length,
                   ),
                 ),
-                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                const SliverToBoxAdapter(child: SizedBox(height: 32)),
               ],
             ),
           );
@@ -229,17 +265,20 @@ class _ActionButton extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-            border: Border.all(color: color.withValues(alpha: 0.2)),
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            border: Border.all(color: color.withValues(alpha: 0.25), width: 0.8),
           ),
           child: Column(
             children: [
-              Icon(icon, color: color, size: 20),
-              const SizedBox(height: 4),
-              Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color)),
+              Icon(icon, color: color, size: 22),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                style: AppTheme.labelSm.copyWith(color: color, fontSize: 10),
+              ),
             ],
           ),
         ),
@@ -257,90 +296,104 @@ class _VocabItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.borderColor),
-      ),
-      child: Column(
+      decoration: AppTheme.cardDecoration(hasShadow: false, hasBorder: true),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 22,
-                height: 22,
-                decoration: BoxDecoration(
-                  color: AppTheme.accentColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Center(
-                  child: Text(
-                    '${index + 1}',
-                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppTheme.accentColor),
-                  ),
+          // Index badge
+          Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: AppTheme.accentColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Center(
+              child: Text(
+                '${index + 1}',
+                style: AppTheme.labelSm.copyWith(
+                  color: AppTheme.accentColor,
+                  fontSize: 11,
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Text(item.word,
-                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.textColor)),
-                        if (item.wordType != null) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                            decoration: BoxDecoration(
-                              color: AppTheme.accentColor.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                            child: Text(item.wordType!,
-                                style: const TextStyle(fontSize: 10, color: AppTheme.accentColor, fontWeight: FontWeight.w600)),
-                          ),
-                        ],
-                      ],
+                    Text(
+                      item.word,
+                      style: AppTheme.titleSm,
                     ),
-                    if (item.ipa != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 2),
-                        child: Text('/${item.ipa}/',
-                            style: const TextStyle(
-                                fontSize: 12, fontFamily: 'monospace', color: Color(0xFF60A5FA))),
-                      ),
-                    const SizedBox(height: 6),
-                    Text(item.definition, style: AppTheme.bodyMd.copyWith(color: AppTheme.text2Color)),
-                    if (item.exampleEn != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: AppTheme.surface2Color,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('"${item.exampleEn}"',
-                                  style: AppTheme.bodyMd.copyWith(fontStyle: FontStyle.italic, color: AppTheme.textColor)),
-                              if (item.exampleVi != null)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 2),
-                                  child: Text(item.exampleVi!, style: AppTheme.bodySm),
-                                ),
-                            ],
+                    if (item.wordType != null) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: AppTheme.pillDecoration(
+                          background: AppTheme.warningColor.withValues(alpha: 0.1),
+                          border: AppTheme.warningColor.withValues(alpha: 0.3),
+                        ),
+                        child: Text(
+                          item.wordType!,
+                          style: AppTheme.bodySm.copyWith(
+                            color: AppTheme.warningColor,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
+                    ],
                   ],
                 ),
-              ),
-            ],
+                if (item.ipa != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      '/${item.ipa}/',
+                      style: AppTheme.bodySm.copyWith(
+                        color: AppTheme.infoColor,
+                        fontFamily: 'monospace',
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                Text(item.definition, style: AppTheme.bodyMd),
+                if (item.exampleEn != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surface2Color,
+                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                        border: Border.all(color: AppTheme.borderColor, width: 0.5),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '"${item.exampleEn}"',
+                            style: AppTheme.bodyMd.copyWith(
+                              fontStyle: FontStyle.italic,
+                              color: AppTheme.textColor,
+                            ),
+                          ),
+                          if (item.exampleVi != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(item.exampleVi!, style: AppTheme.bodySm),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ],
       ),

@@ -21,7 +21,7 @@ class _FlashcardPageState extends State<FlashcardPage> {
   List<VocabItemEntity> _cards = [];
   int _currentIndex = 0;
   bool _isFlipped = false;
-  final Map<int, bool?> _results = {}; // null=unanswered, true=know, false=learning
+  final Map<int, bool?> _results = {};
   bool _showCompletion = false;
   late DateTime _startTime;
 
@@ -41,9 +41,7 @@ class _FlashcardPageState extends State<FlashcardPage> {
   void _flip() => setState(() => _isFlipped = !_isFlipped);
 
   void _answer(bool know) {
-    setState(() {
-      _results[_currentIndex] = know;
-    });
+    setState(() => _results[_currentIndex] = know);
     Future.delayed(const Duration(milliseconds: 300), () {
       if (!mounted) return;
       if (_currentIndex < _cards.length - 1) {
@@ -91,62 +89,99 @@ class _FlashcardPageState extends State<FlashcardPage> {
       builder: (context, state) {
         if (state is LessonLoading || _cards.isEmpty) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Flashcard')),
-            body: const Center(child: CircularProgressIndicator(color: AppTheme.accentColor)),
+            backgroundColor: AppTheme.bgColor,
+            appBar: AppBar(
+              backgroundColor: AppTheme.bgColor,
+              title: const Text('Flashcard'),
+            ),
+            body: const Center(child: CircularProgressIndicator()),
           );
         }
 
         if (_showCompletion) return _buildCompletion();
 
         final card = _cards[_currentIndex];
-        final progress = (_currentIndex) / _cards.length;
+        final progress = _currentIndex / _cards.length;
+        final knowCount = _results.values.where((v) => v == true).length;
+        final learnCount = _results.values.where((v) => v == false).length;
 
         return Scaffold(
+          backgroundColor: AppTheme.bgColor,
           appBar: AppBar(
-            title: Text('Flashcard (${_currentIndex + 1}/${_cards.length})'),
+            backgroundColor: AppTheme.bgColor,
             leading: IconButton(
-              icon: const Icon(Icons.close, size: 20),
+              icon: const Icon(Icons.close_rounded, size: 22),
               onPressed: () => context.pop(),
             ),
+            title: Text(
+              '${_currentIndex + 1} / ${_cards.length}',
+              style: AppTheme.titleSm,
+            ),
+            centerTitle: true,
           ),
           body: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
             child: Column(
               children: [
-                // Progress bar
+                // ── Progress bar ──────────────────────────────
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusPill),
                   child: LinearProgressIndicator(
                     value: progress,
-                    backgroundColor: AppTheme.surface2Color,
+                    backgroundColor: AppTheme.surface3Color,
                     valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.accentColor),
-                    minHeight: 4,
+                    minHeight: 3,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
+
+                // ── Stats row ─────────────────────────────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      '${_results.values.where((v) => v == true).length} đã thuộc',
-                      style: const TextStyle(fontSize: 12, color: AppTheme.successColor, fontWeight: FontWeight.w500),
+                    Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: AppTheme.accentColor,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '$knowCount đã thuộc',
+                          style: AppTheme.bodySm.copyWith(color: AppTheme.accentColor),
+                        ),
+                      ],
                     ),
-                    Text(
-                      '${_results.values.where((v) => v == false).length} cần ôn',
-                      style: AppTheme.bodySm,
+                    Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: AppTheme.errorColor,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text('$learnCount cần ôn', style: AppTheme.bodySm),
+                      ],
                     ),
                   ],
                 ),
                 const SizedBox(height: 20),
 
-                // Flip hint
+                // ── Flip hint ─────────────────────────────────
                 Text(
-                  _isFlipped ? 'Nhấn để xem từ' : 'Nhấn để xem nghĩa',
+                  _isFlipped ? '← Nhấn để xem từ' : 'Nhấn để xem nghĩa →',
                   style: AppTheme.bodySm,
                 ),
                 const SizedBox(height: 12),
 
-                // Flip card
+                // ── Flip card ─────────────────────────────────
                 Expanded(
                   child: FlipCardWidget(
                     isFlipped: _isFlipped,
@@ -166,29 +201,54 @@ class _FlashcardPageState extends State<FlashcardPage> {
                 ),
                 const SizedBox(height: 20),
 
-                // Know / Don't know buttons
+                // ── Action buttons ────────────────────────────
                 Row(
                   children: [
+                    // "Don't know" — outlined pill
                     Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _answer(false),
-                        icon: const Icon(Icons.close, size: 18, color: AppTheme.errorColor),
-                        label: const Text('Cần ôn', style: TextStyle(color: AppTheme.errorColor)),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: AppTheme.errorColor),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                      child: GestureDetector(
+                        onTap: () => _answer(false),
+                        child: Container(
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: AppTheme.errorColor.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(AppTheme.radiusPill),
+                            border: Border.all(color: AppTheme.errorColor.withValues(alpha: 0.4)),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.close_rounded, size: 18, color: AppTheme.errorColor),
+                              const SizedBox(width: 6),
+                              Text('CẦN ÔN', style: AppTheme.labelSm.copyWith(color: AppTheme.errorColor)),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(width: 12),
+                    // "Know" — green pill
                     Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => _answer(true),
-                        icon: const Icon(Icons.check, size: 18),
-                        label: const Text('Đã thuộc'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.successColor,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                      child: GestureDetector(
+                        onTap: () => _answer(true),
+                        child: Container(
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: AppTheme.accentColor,
+                            borderRadius: BorderRadius.circular(AppTheme.radiusPill),
+                            boxShadow: AppTheme.shadowGreen,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.check_rounded, size: 18, color: Colors.black),
+                              const SizedBox(width: 6),
+                              Text(
+                                'ĐÃ THUỘC',
+                                style: AppTheme.labelSm.copyWith(color: Colors.black),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -208,21 +268,24 @@ class _FlashcardPageState extends State<FlashcardPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          if (label != null)
+          if (label != null) ...[
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: AppTheme.accentColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: AppTheme.pillDecoration(
+                background: AppTheme.warningColor.withValues(alpha: 0.1),
+                border: AppTheme.warningColor.withValues(alpha: 0.35),
               ),
-              child: Text(label,
-                  style: const TextStyle(fontSize: 11, color: AppTheme.accentColor, fontWeight: FontWeight.w600)),
+              child: Text(
+                label,
+                style: AppTheme.labelSm.copyWith(color: AppTheme.warningColor, fontSize: 11),
+              ),
             ),
-          if (label != null) const SizedBox(height: 12),
+            const SizedBox(height: 16),
+          ],
           Text(
             main,
             style: TextStyle(
-              fontSize: isBack ? 20 : 28,
+              fontSize: isBack ? 22 : 30,
               fontWeight: FontWeight.w700,
               color: AppTheme.textColor,
               height: 1.3,
@@ -230,23 +293,18 @@ class _FlashcardPageState extends State<FlashcardPage> {
             textAlign: TextAlign.center,
           ),
           if (sub != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             Text(
               sub,
               style: TextStyle(
-                fontSize: 13,
-                color: isBack ? AppTheme.text2Color : const Color(0xFF60A5FA),
+                fontSize: 14,
+                color: isBack ? AppTheme.text2Color : AppTheme.infoColor,
                 fontStyle: isBack ? FontStyle.italic : FontStyle.normal,
                 fontFamily: isBack ? null : 'monospace',
               ),
               textAlign: TextAlign.center,
             ),
           ],
-          const SizedBox(height: 24),
-          Text(
-            isBack ? '← Nhấn để xem từ' : 'Nhấn để xem nghĩa →',
-            style: AppTheme.bodySm.copyWith(fontSize: 11),
-          ),
         ],
       ),
     );
@@ -255,41 +313,73 @@ class _FlashcardPageState extends State<FlashcardPage> {
   Widget _buildCompletion() {
     final knowCount = _results.values.where((v) => v == true).length;
     final learningCount = _results.values.where((v) => v == false).length;
+    final pct = (_cards.isEmpty ? 0 : (knowCount / _cards.length * 100)).round();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Hoàn thành!')),
+      backgroundColor: AppTheme.bgColor,
+      appBar: AppBar(backgroundColor: AppTheme.bgColor, title: const Text('Hoàn thành!')),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(28),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text('🎉', style: TextStyle(fontSize: 64)),
-              const SizedBox(height: 16),
-              Text('Tuyệt vời!', style: AppTheme.displayMd),
+              // Score circle
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppTheme.accentColor.withValues(alpha: 0.12),
+                  border: Border.all(color: AppTheme.accentColor.withValues(alpha: 0.5), width: 2),
+                  boxShadow: AppTheme.shadowGreen,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '$pct%',
+                      style: AppTheme.displayLg.copyWith(color: AppTheme.accentColor),
+                    ),
+                    Text('thuộc bài', style: AppTheme.bodySm),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text('Hoàn thành rồi! 🎉', style: AppTheme.displayMd),
               const SizedBox(height: 8),
-              Text('Bạn đã học xong ${_cards.length} từ vựng', style: AppTheme.bodyMd),
+              Text('Bạn đã học ${_cards.length} từ vựng', style: AppTheme.bodyMd),
               const SizedBox(height: 28),
+
+              // Stats row
               Row(
                 children: [
-                  _StatBox(label: 'Đã thuộc', value: '$knowCount', color: AppTheme.successColor),
+                  _StatBox(label: 'ĐÃ THUỘC', value: '$knowCount', color: AppTheme.accentColor),
                   const SizedBox(width: 12),
-                  _StatBox(label: 'Cần ôn', value: '$learningCount', color: AppTheme.text2Color),
+                  _StatBox(label: 'CẦN ÔN', value: '$learningCount', color: AppTheme.errorColor),
                 ],
               ),
               const SizedBox(height: 32),
-              ElevatedButton.icon(
-                onPressed: _restart,
-                icon: const Icon(Icons.refresh),
-                label: const Text('Học lại'),
-                style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
+
+              // CTAs
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton.icon(
+                  onPressed: _restart,
+                  icon: const Icon(Icons.refresh_rounded, size: 18, color: Colors.black),
+                  label: Text('HỌC LẠI', style: AppTheme.labelLg.copyWith(color: Colors.black)),
+                ),
               ),
               const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: () => context.pushReplacement('/review/${widget.lessonId}'),
-                icon: const Icon(Icons.quiz_outlined),
-                label: const Text('Ôn tập ngay'),
-                style: OutlinedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: OutlinedButton.icon(
+                  onPressed: () => context.pushReplacement('/review/${widget.lessonId}'),
+                  icon: const Icon(Icons.quiz_outlined, size: 18),
+                  label: const Text('ÔN TẬP NGAY'),
+                ),
               ),
               const SizedBox(height: 12),
               TextButton(
@@ -313,17 +403,17 @@ class _StatBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 18),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
+          border: Border.all(color: color.withValues(alpha: 0.25), width: 0.8),
         ),
         child: Column(
           children: [
-            Text(value, style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: color)),
-            const SizedBox(height: 2),
-            Text(label, style: AppTheme.bodySm),
+            Text(value, style: AppTheme.displayLg.copyWith(color: color, fontSize: 32)),
+            const SizedBox(height: 4),
+            Text(label, style: AppTheme.labelSm.copyWith(color: color, fontSize: 10)),
           ],
         ),
       ),

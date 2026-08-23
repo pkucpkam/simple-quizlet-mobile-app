@@ -34,7 +34,9 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp.router(
         title: 'Simple Quizlet',
-        theme: AppTheme.lightTheme,
+        theme: AppTheme.darkTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.dark,
         routerConfig: appRouter,
         debugShowCheckedModeBanner: false,
       ),

@@ -23,35 +23,32 @@ class StatCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppTheme.surfaceColor,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          border: Border.all(color: AppTheme.borderColor),
+          boxShadow: AppTheme.shadowMedium,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(icon, color: color, size: 20),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: AppTheme.bodySm.copyWith(
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.text2Color,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
+            // Icon badge
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              ),
+              child: Center(child: Icon(icon, color: color, size: 18)),
             ),
             const SizedBox(height: 12),
             Text(
               value,
-              style: AppTheme.displayMd.copyWith(
-                color: AppTheme.textColor,
-                fontSize: 20,
-              ),
+              style: AppTheme.displayMd.copyWith(fontSize: 22),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              title,
+              style: AppTheme.bodySm,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),

@@ -35,6 +35,9 @@ dependencies:
   # Utilities
   intl: ^0.20.2
 
+  # Fonts (Inter ≈ CircularSp for Spotify design)
+  google_fonts: ^6.2.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

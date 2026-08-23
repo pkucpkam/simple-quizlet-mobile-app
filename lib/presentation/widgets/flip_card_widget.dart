@@ -28,11 +28,11 @@ class _FlipCardWidgetState extends State<FlipCardWidget> with SingleTickerProvid
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 420),
       vsync: this,
     );
     _animation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic),
     );
   }
 
@@ -68,11 +68,13 @@ class _FlipCardWidgetState extends State<FlipCardWidget> with SingleTickerProvid
             transform: Matrix4.identity()
               ..setEntry(3, 2, 0.001)
               ..rotateY(angle),
-            child: isFront ? _buildCard(widget.front, isFront: true) : Transform(
-              alignment: Alignment.center,
-              transform: Matrix4.identity()..rotateY(math.pi),
-              child: _buildCard(widget.back, isFront: false),
-            ),
+            child: isFront
+                ? _buildCard(widget.front, isFront: true)
+                : Transform(
+                    alignment: Alignment.center,
+                    transform: Matrix4.identity()..rotateY(math.pi),
+                    child: _buildCard(widget.back, isFront: false),
+                  ),
           );
         },
       ),
@@ -84,19 +86,18 @@ class _FlipCardWidgetState extends State<FlipCardWidget> with SingleTickerProvid
       width: double.infinity,
       constraints: const BoxConstraints(minHeight: 220),
       decoration: BoxDecoration(
+        // Front: dark surface; Back: slightly elevated with green accent glow
         color: isFront ? AppTheme.surfaceColor : AppTheme.surface2Color,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
         border: Border.all(
-          color: isFront ? AppTheme.borderColor : AppTheme.accentColor.withValues(alpha: 0.3),
-          width: isFront ? 1 : 1.5,
+          color: isFront
+              ? AppTheme.borderColor
+              : AppTheme.accentColor.withValues(alpha: 0.35),
+          width: isFront ? 0.8 : 1.5,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        boxShadow: isFront
+            ? AppTheme.shadowMedium
+            : AppTheme.shadowGreen,
       ),
       child: content,
     );

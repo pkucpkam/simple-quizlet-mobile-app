@@ -26,7 +26,6 @@ class _ReviewPageState extends State<ReviewPage> {
   List<VocabItemEntity> _queue = [];
   int _currentIndex = 0;
   int _correctCount = 0;
-  bool _showResult = false;
   bool _answered = false;
   ReviewMode _mode = ReviewMode.normal;
   bool _showCompletion = false;
@@ -62,7 +61,6 @@ class _ReviewPageState extends State<ReviewPage> {
     setState(() {
       _answered = true;
       _correctCount++;
-      _showResult = true;
     });
     Future.delayed(const Duration(milliseconds: 800), _next);
   }
@@ -70,7 +68,6 @@ class _ReviewPageState extends State<ReviewPage> {
   void _onWrong() {
     setState(() {
       _answered = true;
-      _showResult = true;
     });
   }
 
@@ -80,7 +77,6 @@ class _ReviewPageState extends State<ReviewPage> {
       setState(() {
         _currentIndex++;
         _answered = false;
-        _showResult = false;
       });
       _pickMode();
     } else {
@@ -105,7 +101,6 @@ class _ReviewPageState extends State<ReviewPage> {
       _currentIndex = 0;
       _correctCount = 0;
       _answered = false;
-      _showResult = false;
       _showCompletion = false;
       _queue = List.from(_vocab)..shuffle(_random);
       _startTime = DateTime.now();
@@ -393,8 +388,7 @@ class _OptionButton extends StatelessWidget {
 
 class _NextButton extends StatelessWidget {
   final VoidCallback onNext;
-  final bool isLast;
-  const _NextButton({required this.onNext, this.isLast = false});
+  const _NextButton({required this.onNext});
 
   @override
   Widget build(BuildContext context) {
@@ -404,8 +398,8 @@ class _NextButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onNext,
         style: ElevatedButton.styleFrom(backgroundColor: AppTheme.surface2Color),
-        child: Text(isLast ? 'Xem kết quả' : 'Từ tiếp theo →',
-            style: const TextStyle(color: AppTheme.textColor, fontWeight: FontWeight.w600)),
+        child: const Text('Từ tiếp theo →',
+            style: TextStyle(color: AppTheme.textColor, fontWeight: FontWeight.w600)),
       ),
     );
   }

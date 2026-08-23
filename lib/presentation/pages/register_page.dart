@@ -40,8 +40,9 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.bgColor,
       appBar: AppBar(
-        title: const Text('Đăng ký'),
+        title: const Text('Tạo tài khoản'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 18),
           onPressed: () => context.pop(),
@@ -52,22 +53,21 @@ class _RegisterPageState extends State<RegisterPage> {
           if (state is AuthRegistered) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Đăng ký thành công! Vui lòng kiểm tra email để xác minh tài khoản.'),
-                backgroundColor: AppTheme.successColor,
+                content: Text('Đăng ký thành công! Vui lòng kiểm tra email để xác minh.'),
                 duration: Duration(seconds: 4),
               ),
             );
             context.go('/login');
           } else if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: AppTheme.errorColor),
+              SnackBar(content: Text(state.message)),
             );
           }
         },
         builder: (context, state) {
           final loading = state is AuthLoading;
           return SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
             child: Form(
               key: _formKey,
               child: Column(
@@ -76,15 +76,13 @@ class _RegisterPageState extends State<RegisterPage> {
                   Text('Tạo tài khoản mới', style: AppTheme.displayMd),
                   const SizedBox(height: 6),
                   Text('Điền thông tin để bắt đầu học', style: AppTheme.bodyMd),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 32),
 
-                  _label('Email'),
-                  const SizedBox(height: 6),
-                  TextFormField(
+                  _buildField(
                     controller: _emailCtrl,
+                    hint: 'Email',
+                    icon: Icons.alternate_email_rounded,
                     keyboardType: TextInputType.emailAddress,
-                    style: AppTheme.bodyLg,
-                    decoration: const InputDecoration(hintText: 'you@example.com'),
                     validator: (v) {
                       if (v == null || v.isEmpty) return 'Vui lòng nhập email';
                       if (!v.contains('@')) return 'Email không hợp lệ';
@@ -93,71 +91,67 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   const SizedBox(height: 14),
 
-                  _label('Tên người dùng'),
-                  const SizedBox(height: 6),
-                  TextFormField(
+                  _buildField(
                     controller: _usernameCtrl,
-                    style: AppTheme.bodyLg,
-                    decoration: const InputDecoration(hintText: 'username của bạn'),
+                    hint: 'Tên người dùng',
+                    icon: Icons.person_outline_rounded,
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'Vui lòng nhập tên người dùng';
-                      if (v.trim().length < 3) return 'Tên người dùng ít nhất 3 ký tự';
+                      if (v == null || v.trim().isEmpty) return 'Vui lòng nhập tên';
+                      if (v.trim().length < 3) return 'Ít nhất 3 ký tự';
                       return null;
                     },
                   ),
                   const SizedBox(height: 14),
 
-                  _label('Mật khẩu'),
-                  const SizedBox(height: 6),
-                  TextFormField(
+                  _buildField(
                     controller: _passCtrl,
-                    obscureText: _obscure,
-                    style: AppTheme.bodyLg,
-                    decoration: InputDecoration(
-                      hintText: '••••••••',
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                          color: AppTheme.text3Color,
-                          size: 20,
-                        ),
-                        onPressed: () => setState(() => _obscure = !_obscure),
+                    hint: 'Mật khẩu',
+                    icon: Icons.lock_outline_rounded,
+                    obscure: _obscure,
+                    suffix: IconButton(
+                      icon: Icon(
+                        _obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                        color: AppTheme.text3Color,
+                        size: 20,
                       ),
+                      onPressed: () => setState(() => _obscure = !_obscure),
                     ),
                     validator: (v) {
                       if (v == null || v.isEmpty) return 'Vui lòng nhập mật khẩu';
-                      if (v.length < 6) return 'Mật khẩu ít nhất 6 ký tự';
+                      if (v.length < 6) return 'Ít nhất 6 ký tự';
                       return null;
                     },
                   ),
                   const SizedBox(height: 14),
 
-                  _label('Xác nhận mật khẩu'),
-                  const SizedBox(height: 6),
-                  TextFormField(
+                  _buildField(
                     controller: _confirmPassCtrl,
-                    obscureText: true,
-                    style: AppTheme.bodyLg,
-                    decoration: const InputDecoration(hintText: '••••••••'),
+                    hint: 'Xác nhận mật khẩu',
+                    icon: Icons.lock_outline_rounded,
+                    obscure: true,
                     validator: (v) {
                       if (v != _passCtrl.text) return 'Mật khẩu không khớp';
                       return null;
                     },
                   ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 32),
 
+                  // Primary CTA
                   SizedBox(
                     width: double.infinity,
-                    height: 50,
+                    height: 52,
                     child: ElevatedButton(
                       onPressed: loading ? null : _submit,
                       child: loading
                           ? const SizedBox(
                               width: 20,
                               height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.black),
                             )
-                          : const Text('Đăng ký'),
+                          : Text(
+                              'ĐĂNG KÝ',
+                              style: AppTheme.labelLg.copyWith(color: Colors.black),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -182,8 +176,26 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Widget _label(String text) => Text(
-        text,
-        style: AppTheme.bodyMd.copyWith(color: AppTheme.textColor, fontWeight: FontWeight.w500),
-      );
+  Widget _buildField({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    TextInputType? keyboardType,
+    bool obscure = false,
+    Widget? suffix,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      obscureText: obscure,
+      validator: validator,
+      style: AppTheme.bodyLg,
+      decoration: InputDecoration(
+        hintText: hint,
+        prefixIcon: Icon(icon, color: AppTheme.text3Color, size: 20),
+        suffixIcon: suffix,
+      ),
+    );
+  }
 }

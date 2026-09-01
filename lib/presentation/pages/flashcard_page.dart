@@ -73,7 +73,7 @@ class _FlashcardPageState extends State<FlashcardPage> {
     final authState = context.read<AuthBloc>().state;
     if (authState is! AuthAuthenticated) return;
     final timeSpent = DateTime.now().difference(_startTime).inSeconds;
-    context.read<IncrementStudyStatsUseCase>().call(
+    injector<IncrementStudyStatsUseCase>().call(
           authState.user.uid,
           StudyMode.flashcard,
           timeSpent,

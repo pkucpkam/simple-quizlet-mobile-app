@@ -16,4 +16,8 @@ class LessonRepositoryImpl implements LessonRepository {
   @override
   Future<List<LessonEntity>> searchLessons(String term) =>
       _dataSource.searchLessons(term);
+
+  @override
+  Future<List<LessonEntity>> getMyLessons(String creator) =>
+      _dataSource.getMyLessons(creator);
 }

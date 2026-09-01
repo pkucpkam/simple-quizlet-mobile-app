@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:simple_quizlet_mobile_app/core/di/injector.dart';
 import 'package:simple_quizlet_mobile_app/core/theme/app_theme.dart';
 import 'package:simple_quizlet_mobile_app/domain/entities/vocab_item_entity.dart';
 import 'package:simple_quizlet_mobile_app/domain/repositories/history_repository.dart';
 import 'package:simple_quizlet_mobile_app/domain/usecases/history_usecases.dart';
+import 'package:simple_quizlet_mobile_app/domain/usecases/srs_usecases.dart';
 import 'package:simple_quizlet_mobile_app/presentation/blocs/auth/auth_bloc.dart';
 import 'package:simple_quizlet_mobile_app/presentation/blocs/lesson/lesson_bloc.dart';
 import 'package:simple_quizlet_mobile_app/presentation/widgets/flip_card_widget.dart';
@@ -21,7 +23,7 @@ class _FlashcardPageState extends State<FlashcardPage> {
   List<VocabItemEntity> _cards = [];
   int _currentIndex = 0;
   bool _isFlipped = false;
-  final Map<int, bool?> _results = {};
+  final Map<int, String> _statuses = {}; // 'know' | 'still_learning'
   bool _showCompletion = false;
   late DateTime _startTime;
 
@@ -41,18 +43,29 @@ class _FlashcardPageState extends State<FlashcardPage> {
   void _flip() => setState(() => _isFlipped = !_isFlipped);
 
   void _answer(bool know) {
-    setState(() => _results[_currentIndex] = know);
+    setState(() => _statuses[_currentIndex] = know ? 'know' : 'still_learning');
     Future.delayed(const Duration(milliseconds: 300), () {
       if (!mounted) return;
-      if (_currentIndex < _cards.length - 1) {
-        setState(() {
-          _currentIndex++;
-          _isFlipped = false;
-        });
-      } else {
+      final hasRemaining = _cards.asMap().entries.any(
+            (e) => _statuses[e.key] != 'know',
+          );
+      if (!hasRemaining) {
         _saveHistory();
         setState(() => _showCompletion = true);
+      } else {
+        _moveToNext();
       }
+    });
+  }
+
+  void _moveToNext() {
+    int next = (_currentIndex + 1) % _cards.length;
+    while (_statuses[next] == 'know' && next != _currentIndex) {
+      next = (next + 1) % _cards.length;
+    }
+    setState(() {
+      _currentIndex = next;
+      _isFlipped = false;
     });
   }
 
@@ -65,13 +78,22 @@ class _FlashcardPageState extends State<FlashcardPage> {
           StudyMode.flashcard,
           timeSpent,
         );
+
+    // Initialize SRS cards if not already created
+    try {
+      injector<InitializeCardsUseCase>().call(
+        widget.lessonId,
+        authState.user.uid,
+        _cards,
+      );
+    } catch (_) {}
   }
 
   void _restart() {
     setState(() {
       _currentIndex = 0;
       _isFlipped = false;
-      _results.clear();
+      _statuses.clear();
       _showCompletion = false;
       _cards.shuffle();
       _startTime = DateTime.now();
@@ -101,9 +123,9 @@ class _FlashcardPageState extends State<FlashcardPage> {
         if (_showCompletion) return _buildCompletion();
 
         final card = _cards[_currentIndex];
-        final progress = _currentIndex / _cards.length;
-        final knowCount = _results.values.where((v) => v == true).length;
-        final learnCount = _results.values.where((v) => v == false).length;
+        final knowCount = _statuses.values.where((v) => v == 'know').length;
+        final learnCount = _cards.length - knowCount;
+        final progress = knowCount / _cards.length;
 
         return Scaffold(
           backgroundColor: AppTheme.bgColor,
@@ -311,8 +333,8 @@ class _FlashcardPageState extends State<FlashcardPage> {
   }
 
   Widget _buildCompletion() {
-    final knowCount = _results.values.where((v) => v == true).length;
-    final learningCount = _results.values.where((v) => v == false).length;
+    final knowCount = _statuses.values.where((v) => v == 'know').length;
+    final learningCount = _cards.length - knowCount;
     final pct = (_cards.isEmpty ? 0 : (knowCount / _cards.length * 100)).round();
 
     return Scaffold(

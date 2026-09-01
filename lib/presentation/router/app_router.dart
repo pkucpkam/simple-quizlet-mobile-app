@@ -12,6 +12,9 @@ import 'package:simple_quizlet_mobile_app/presentation/pages/review_page.dart';
 import 'package:simple_quizlet_mobile_app/presentation/pages/test_page.dart';
 import 'package:simple_quizlet_mobile_app/presentation/pages/profile_page.dart';
 
+import 'package:simple_quizlet_mobile_app/presentation/pages/my_lessons_page.dart';
+import 'package:simple_quizlet_mobile_app/presentation/pages/srs_review_page.dart';
+
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
   redirect: (BuildContext context, GoRouterState state) async {
@@ -41,6 +44,20 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/register',
       builder: (context, state) => const RegisterPage(),
+    ),
+    GoRoute(
+      path: '/my-lessons',
+      builder: (context, state) => const MyLessonsPage(),
+    ),
+    GoRoute(
+      path: '/srs-review',
+      builder: (context, state) => const SrsReviewPage(),
+    ),
+    GoRoute(
+      path: '/srs-review/:lessonId',
+      builder: (context, state) => SrsReviewPage(
+        lessonId: state.pathParameters['lessonId'],
+      ),
     ),
     GoRoute(
       path: '/folder/:id',

@@ -110,6 +110,23 @@ class _ProfilePageState extends State<ProfilePage> {
                   onPressed: () => context.pop(),
                 ),
                 actions: [
+                  // Notification settings
+                  IconButton(
+                    tooltip: 'Thong bao',
+                    icon: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surface2Color.withValues(alpha: 0.85),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.notifications_outlined,
+                        size: 16,
+                        color: AppTheme.text2Color,
+                      ),
+                    ),
+                    onPressed: () => context.push('/notification-settings'),
+                  ),
                   // Logout
                   GestureDetector(
                     onTap: () {

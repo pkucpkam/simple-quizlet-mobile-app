@@ -14,6 +14,7 @@ import 'package:simple_quizlet_mobile_app/presentation/pages/profile_page.dart';
 
 import 'package:simple_quizlet_mobile_app/presentation/pages/my_lessons_page.dart';
 import 'package:simple_quizlet_mobile_app/presentation/pages/srs_review_page.dart';
+import 'package:simple_quizlet_mobile_app/presentation/pages/notification_settings_page.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
@@ -92,6 +93,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/profile',
       builder: (context, state) => const ProfilePage(),
+    ),
+    GoRoute(
+      path: '/notification-settings',
+      builder: (context, state) => const NotificationSettingsPage(),
     ),
   ],
 );

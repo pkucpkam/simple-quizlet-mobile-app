@@ -4,6 +4,10 @@ import 'package:get_it/get_it.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// Services
+import 'package:simple_quizlet_mobile_app/core/services/notification_service.dart';
+import 'package:simple_quizlet_mobile_app/core/services/notification_scheduler.dart';
+
 // Datasources
 import 'package:simple_quizlet_mobile_app/data/datasources/auth_remote_datasource.dart';
 import 'package:simple_quizlet_mobile_app/data/datasources/content_remote_datasource.dart';
@@ -46,6 +50,14 @@ Future<void> initInjector() async {
   injector.registerLazySingleton<Logger>(() => Logger());
   injector.registerLazySingleton<FirebaseAuth>(() => FirebaseAuth.instance);
   injector.registerLazySingleton<FirebaseFirestore>(() => FirebaseFirestore.instance);
+
+  // Notification
+  injector.registerLazySingleton<NotificationScheduler>(
+    () => NotificationScheduler(
+      prefs: injector(),
+      notifService: NotificationService.instance,
+    ),
+  );
 
   // Data Sources
   injector.registerLazySingleton<AuthRemoteDataSource>(

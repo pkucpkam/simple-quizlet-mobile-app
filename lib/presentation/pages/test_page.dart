@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:simple_quizlet_mobile_app/core/di/injector.dart';
 import 'package:simple_quizlet_mobile_app/core/theme/app_theme.dart';
 import 'package:simple_quizlet_mobile_app/domain/entities/vocab_item_entity.dart';
 import 'package:simple_quizlet_mobile_app/domain/repositories/history_repository.dart';
@@ -26,6 +27,7 @@ class _TestPageState extends State<TestPage> {
   int _correctCount = 0;
   List<_TestResult> _results = [];
   bool _showResult = false;
+  bool _showWrongOnly = false;
   late DateTime _startTime;
   final _focusNode = FocusNode();
 
@@ -87,7 +89,7 @@ class _TestPageState extends State<TestPage> {
     final authState = context.read<AuthBloc>().state;
     if (authState is! AuthAuthenticated) return;
     final timeSpent = DateTime.now().difference(_startTime).inSeconds;
-    context.read<IncrementStudyStatsUseCase>().call(
+    injector<IncrementStudyStatsUseCase>().call(
           authState.user.uid,
           StudyMode.test,
           timeSpent,
@@ -332,13 +334,17 @@ class _TestPageState extends State<TestPage> {
 
   Widget _buildResult() {
     final pct = _vocab.isEmpty ? 0 : (_correctCount / _queue.length * 100).round();
+    final wrongCount = _queue.length - _correctCount;
+    final filteredResults = _showWrongOnly ? _results.where((r) => !r.isCorrect).toList() : _results;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Kết quả kiểm tra')),
       body: Column(
         children: [
+          // Stat summary header
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(20),
             color: AppTheme.surfaceColor,
             child: Column(
               children: [
@@ -353,20 +359,46 @@ class _TestPageState extends State<TestPage> {
                                 ? AppTheme.accentColor
                                 : AppTheme.errorColor,
                         fontSize: 40)),
-                Text('$_correctCount / ${_queue.length} câu đúng', style: AppTheme.bodyMd),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
+                
+                // Stat Chips (Đúng / Sai)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    ElevatedButton.icon(
-                      onPressed: _restart,
-                      icon: const Icon(Icons.refresh, size: 16),
-                      label: const Text('Làm lại'),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.successColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppTheme.successColor.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.check_circle_rounded, color: AppTheme.successColor, size: 18),
+                          const SizedBox(width: 6),
+                          Text('Đúng: $_correctCount',
+                              style: const TextStyle(
+                                  color: AppTheme.successColor, fontWeight: FontWeight.bold, fontSize: 13)),
+                        ],
+                      ),
                     ),
-                    const SizedBox(width: 10),
-                    OutlinedButton(
-                      onPressed: () => context.pop(),
-                      child: const Text('Thoát'),
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.errorColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppTheme.errorColor.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.cancel_rounded, color: AppTheme.errorColor, size: 18),
+                          const SizedBox(width: 6),
+                          Text('Sai: $wrongCount',
+                              style: const TextStyle(
+                                  color: AppTheme.errorColor, fontWeight: FontWeight.bold, fontSize: 13)),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -374,56 +406,165 @@ class _TestPageState extends State<TestPage> {
             ),
           ),
           const Divider(height: 1),
+
+          // Filter bar
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: Text('Chi tiết', style: AppTheme.labelMd),
-          ),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: _results.length,
-              itemBuilder: (context, index) {
-                final r = _results[index];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: r.isCorrect
-                        ? AppTheme.successColor.withValues(alpha: 0.06)
-                        : AppTheme.errorColor.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    border: Border.all(
-                      color: r.isCorrect
-                          ? AppTheme.successColor.withValues(alpha: 0.2)
-                          : AppTheme.errorColor.withValues(alpha: 0.2),
-                    ),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        r.isCorrect ? Icons.check_circle_outline : Icons.cancel_outlined,
-                        color: r.isCorrect ? AppTheme.successColor : AppTheme.errorColor,
-                        size: 18,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Chi tiết câu hỏi', style: AppTheme.labelMd.copyWith(fontWeight: FontWeight.bold)),
+                Row(
+                  children: [
+                    ChoiceChip(
+                      label: Text('Tất cả (${_results.length})'),
+                      selected: !_showWrongOnly,
+                      onSelected: (_) => setState(() => _showWrongOnly = false),
+                      selectedColor: AppTheme.accentColor.withValues(alpha: 0.2),
+                      labelStyle: TextStyle(
+                        fontSize: 12,
+                        color: !_showWrongOnly ? AppTheme.accentColor : AppTheme.textColor,
+                        fontWeight: !_showWrongOnly ? FontWeight.bold : FontWeight.normal,
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
+                    ),
+                    const SizedBox(width: 8),
+                    ChoiceChip(
+                      label: Text('Từ sai ($wrongCount)'),
+                      selected: _showWrongOnly,
+                      onSelected: (_) => setState(() => _showWrongOnly = true),
+                      selectedColor: AppTheme.errorColor.withValues(alpha: 0.2),
+                      labelStyle: TextStyle(
+                        fontSize: 12,
+                        color: _showWrongOnly ? AppTheme.errorColor : AppTheme.textColor,
+                        fontWeight: _showWrongOnly ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Result List
+          Expanded(
+            child: filteredResults.isEmpty
+                ? Center(
+                    child: Text(
+                      _showWrongOnly ? 'Chúc mừng! Bạn không làm sai từ nào 🎉' : 'Chưa có dữ liệu',
+                      style: AppTheme.bodyMd,
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: filteredResults.length,
+                    itemBuilder: (context, index) {
+                      final r = filteredResults[index];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: r.isCorrect
+                              ? AppTheme.successColor.withValues(alpha: 0.06)
+                              : AppTheme.errorColor.withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                          border: Border.all(
+                            color: r.isCorrect
+                                ? AppTheme.successColor.withValues(alpha: 0.2)
+                                : AppTheme.errorColor.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(r.definition,
-                                style: AppTheme.titleMd.copyWith(fontSize: 14)),
-                            Text('Đúng: ${r.word}', style: AppTheme.bodyMd),
-                            if (!r.isCorrect)
-                              Text('Bạn nhập: ${r.userAnswer}',
-                                  style: AppTheme.bodyMd.copyWith(color: AppTheme.errorColor)),
+                            Icon(
+                              r.isCorrect ? Icons.check_circle_outline : Icons.cancel_outlined,
+                              color: r.isCorrect ? AppTheme.successColor : AppTheme.errorColor,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    r.definition,
+                                    style: AppTheme.titleMd.copyWith(fontSize: 15),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  RichText(
+                                    text: TextSpan(
+                                      style: AppTheme.bodyMd,
+                                      children: [
+                                        const TextSpan(text: 'Đáp án đúng: '),
+                                        TextSpan(
+                                          text: r.word,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: AppTheme.successColor,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (!r.isCorrect) ...[
+                                    const SizedBox(height: 2),
+                                    RichText(
+                                      text: TextSpan(
+                                        style: AppTheme.bodyMd,
+                                        children: [
+                                          const TextSpan(text: 'Bạn đã nhập: '),
+                                          TextSpan(
+                                            text: r.userAnswer.isEmpty ? '(Bỏ trống)' : r.userAnswer,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: AppTheme.errorColor,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
                           ],
                         ),
-                      ),
-                    ],
+                      );
+                    },
                   ),
-                );
-              },
+          ),
+
+          // Bottom Bar
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              color: AppTheme.surfaceColor,
+              border: Border(top: BorderSide(color: AppTheme.borderColor)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _restart,
+                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                    label: const Text('Làm lại'),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(0, 48),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => context.pop(),
+                    icon: const Icon(Icons.check_rounded, size: 18),
+                    label: const Text('Hoàn thành'),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(0, 48),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],

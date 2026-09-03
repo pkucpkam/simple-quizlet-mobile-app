@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:simple_quizlet_mobile_app/core/di/injector.dart';
 import 'package:simple_quizlet_mobile_app/core/theme/app_theme.dart';
 import 'package:simple_quizlet_mobile_app/domain/entities/vocab_item_entity.dart';
 import 'package:simple_quizlet_mobile_app/domain/repositories/history_repository.dart';
@@ -26,6 +27,7 @@ class _ReviewPageState extends State<ReviewPage> {
   List<VocabItemEntity> _queue = [];
   int _currentIndex = 0;
   int _correctCount = 0;
+  final List<VocabItemEntity> _wrongVocab = [];
   bool _answered = false;
   ReviewMode _mode = ReviewMode.normal;
   bool _showCompletion = false;
@@ -68,6 +70,10 @@ class _ReviewPageState extends State<ReviewPage> {
   void _onWrong() {
     setState(() {
       _answered = true;
+      final current = _queue[_currentIndex];
+      if (!_wrongVocab.contains(current)) {
+        _wrongVocab.add(current);
+      }
     });
   }
 
@@ -89,20 +95,23 @@ class _ReviewPageState extends State<ReviewPage> {
     final authState = context.read<AuthBloc>().state;
     if (authState is! AuthAuthenticated) return;
     final timeSpent = DateTime.now().difference(_startTime).inSeconds;
-    context.read<IncrementStudyStatsUseCase>().call(
+    injector<IncrementStudyStatsUseCase>().call(
           authState.user.uid,
           StudyMode.review,
           timeSpent,
         );
   }
 
-  void _restart() {
+  void _restart({List<VocabItemEntity>? customQueue}) {
     setState(() {
       _currentIndex = 0;
       _correctCount = 0;
       _answered = false;
       _showCompletion = false;
-      _queue = List.from(_vocab)..shuffle(_random);
+      _wrongVocab.clear();
+      _queue = customQueue != null
+          ? (List.from(customQueue)..shuffle(_random))
+          : (List.from(_vocab)..shuffle(_random));
       _startTime = DateTime.now();
     });
     _pickMode();
@@ -213,42 +222,202 @@ class _ReviewPageState extends State<ReviewPage> {
 
   Widget _buildCompletion() {
     final pct = _vocab.isEmpty ? 0 : (_correctCount / _queue.length * 100).round();
+    final wrongCount = _queue.length - _correctCount;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Kết quả')),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(pct >= 80 ? '🏆' : pct >= 50 ? '👍' : '📚',
-                  style: const TextStyle(fontSize: 64)),
-              const SizedBox(height: 16),
-              Text('$pct%', style: AppTheme.displayLg.copyWith(color: AppTheme.accentColor, fontSize: 48)),
-              const SizedBox(height: 8),
-              Text('$_correctCount / ${_queue.length} câu đúng', style: AppTheme.bodyMd),
-              const SizedBox(height: 32),
-              ElevatedButton.icon(
-                onPressed: _restart,
-                icon: const Icon(Icons.refresh),
-                label: const Text('Ôn tập lại'),
-                style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: () => context.pushReplacement('/test/${widget.lessonId}'),
-                icon: const Icon(Icons.edit_outlined),
-                label: const Text('Làm bài kiểm tra'),
-                style: OutlinedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
-              ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () => context.pop(),
-                child: const Text('Quay lại bài học'),
-              ),
-            ],
+      appBar: AppBar(title: const Text('Kết quả ôn tập')),
+      body: Column(
+        children: [
+          // Banner summary
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            color: AppTheme.surfaceColor,
+            child: Column(
+              children: [
+                Text(pct >= 80 ? '🏆' : pct >= 50 ? '👍' : '📚',
+                    style: const TextStyle(fontSize: 48)),
+                const SizedBox(height: 8),
+                Text('$pct%',
+                    style: AppTheme.displayLg.copyWith(
+                        color: pct >= 80
+                            ? AppTheme.successColor
+                            : pct >= 50
+                                ? AppTheme.accentColor
+                                : AppTheme.errorColor,
+                        fontSize: 40)),
+                const SizedBox(height: 12),
+                
+                // Stat cards (Đúng / Sai)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.successColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppTheme.successColor.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.check_circle_rounded, color: AppTheme.successColor, size: 18),
+                          const SizedBox(width: 6),
+                          Text('Đúng: $_correctCount',
+                              style: const TextStyle(
+                                  color: AppTheme.successColor, fontWeight: FontWeight.bold, fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.errorColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppTheme.errorColor.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.cancel_rounded, color: AppTheme.errorColor, size: 18),
+                          const SizedBox(width: 6),
+                          Text('Sai: $wrongCount',
+                              style: const TextStyle(
+                                  color: AppTheme.errorColor, fontWeight: FontWeight.bold, fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
+          const Divider(height: 1),
+
+          // Detail section header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _wrongVocab.isNotEmpty ? 'Các từ làm sai (${_wrongVocab.length})' : 'Tất cả các từ trong bài',
+                  style: AppTheme.labelMd.copyWith(fontWeight: FontWeight.bold),
+                ),
+                if (_wrongVocab.isNotEmpty)
+                  TextButton.icon(
+                    onPressed: () => _restart(customQueue: List.from(_wrongVocab)),
+                    icon: const Icon(Icons.replay_rounded, size: 16),
+                    label: const Text('Ôn lại từ sai', style: TextStyle(fontSize: 13)),
+                    style: TextButton.styleFrom(foregroundColor: AppTheme.accentColor),
+                  ),
+              ],
+            ),
+          ),
+
+          // List of wrong words or all words
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: _wrongVocab.isNotEmpty ? _wrongVocab.length : _queue.length,
+              itemBuilder: (context, index) {
+                final item = _wrongVocab.isNotEmpty ? _wrongVocab[index] : _queue[index];
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: _wrongVocab.isNotEmpty
+                        ? AppTheme.errorColor.withValues(alpha: 0.06)
+                        : AppTheme.surfaceColor,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                    border: Border.all(
+                      color: _wrongVocab.isNotEmpty
+                          ? AppTheme.errorColor.withValues(alpha: 0.2)
+                          : AppTheme.borderColor,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _wrongVocab.isNotEmpty ? Icons.cancel_outlined : Icons.check_circle_outline,
+                        color: _wrongVocab.isNotEmpty ? AppTheme.errorColor : AppTheme.successColor,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(item.word, style: AppTheme.titleMd.copyWith(fontSize: 16)),
+                                if (item.ipa != null) ...[
+                                  const SizedBox(width: 8),
+                                  Text('/${item.ipa}/',
+                                      style: const TextStyle(fontSize: 13, color: Color(0xFFD97706), fontFamily: 'monospace')),
+                                ],
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(item.definition, style: AppTheme.bodyMd),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+
+          // Bottom Action Buttons
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              color: AppTheme.surfaceColor,
+              border: Border(top: BorderSide(color: AppTheme.borderColor)),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _restart(),
+                        icon: const Icon(Icons.refresh_rounded, size: 18),
+                        label: const Text('Ôn lại tất cả'),
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(0, 46),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => context.pushReplacement('/test/${widget.lessonId}'),
+                        icon: const Icon(Icons.edit_outlined, size: 18),
+                        label: const Text('Kiểm tra'),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(0, 46),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () => context.pop(),
+                    child: const Text('Quay lại bài học'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -646,62 +815,98 @@ class _PracticeModeState extends State<_PracticeMode> {
         ),
         const SizedBox(height: 20),
 
-        // Letter slots
-        Text('Gõ từ tiếng Anh:', style: AppTheme.labelMd),
-        const SizedBox(height: 12),
-        GestureDetector(
-          onTap: () => _focus.requestFocus(),
-          child: Wrap(
-            spacing: 6,
-            runSpacing: 8,
-            children: wordChars.asMap().entries.map((e) {
-              final i = e.key;
-              final char = e.value;
-              final isSpace = char == ' ';
-              final isRevealed = _hints.contains(i);
-              final userChar = i < _ctrl.text.length ? _ctrl.text[i] : '';
-              final displayChar = userChar.isNotEmpty ? userChar : (isRevealed ? char : '');
+        // Letter slots container
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceColor,
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            border: Border.all(color: AppTheme.borderColor),
+          ),
+          child: Column(
+            children: [
+              Text('Gõ từ tiếng Anh:', style: AppTheme.labelMd),
+              const SizedBox(height: 14),
+              GestureDetector(
+                onTap: () => _focus.requestFocus(),
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 10,
+                  children: wordChars.asMap().entries.map((e) {
+                    final i = e.key;
+                    final char = e.value;
+                    final isSpace = char == ' ';
+                    final isRevealed = _hints.contains(i);
+                    final userChar = i < _ctrl.text.length ? _ctrl.text[i] : '';
+                    final displayChar = userChar.isNotEmpty ? userChar : (isRevealed ? char : '');
 
-              Color borderColor = AppTheme.borderColor;
-              Color textColor = AppTheme.textColor;
-              Color bgColor = AppTheme.surfaceColor;
+                    Color borderColor = AppTheme.borderColor;
+                    Color textColor = AppTheme.textColor;
+                    Color bgColor = AppTheme.surface2Color;
 
-              if (isAnswered) {
-                if (_isCorrect == true) {
-                  borderColor = AppTheme.successColor;
-                  textColor = AppTheme.successColor;
-                  bgColor = AppTheme.successColor.withValues(alpha: 0.08);
-                } else {
-                  borderColor = AppTheme.errorColor;
-                  textColor = AppTheme.errorColor;
-                  bgColor = AppTheme.errorColor.withValues(alpha: 0.08);
-                }
-              } else if (i == _ctrl.text.length) {
-                borderColor = AppTheme.accentColor;
-              } else if (isRevealed && userChar.isEmpty) {
-                borderColor = const Color(0xFFF59E0B);
-                textColor = const Color(0xFFB45309);
-                bgColor = const Color(0xFFFEF3C7);
-              }
+                    if (isAnswered) {
+                      if (_isCorrect == true) {
+                        borderColor = AppTheme.successColor;
+                        textColor = AppTheme.successColor;
+                        bgColor = AppTheme.successColor.withValues(alpha: 0.12);
+                      } else {
+                        borderColor = AppTheme.errorColor;
+                        textColor = AppTheme.errorColor;
+                        bgColor = AppTheme.errorColor.withValues(alpha: 0.12);
+                      }
+                    } else if (i == _ctrl.text.length) {
+                      borderColor = AppTheme.accentColor;
+                      bgColor = AppTheme.accentColor.withValues(alpha: 0.08);
+                    } else if (isRevealed && userChar.isEmpty) {
+                      borderColor = const Color(0xFFF59E0B);
+                      textColor = const Color(0xFFB45309);
+                      bgColor = const Color(0xFFFEF3C7);
+                    }
 
-              if (isSpace) {
-                return const SizedBox(width: 12);
-              }
+                    if (isSpace) {
+                      return const SizedBox(width: 14);
+                    }
 
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                width: 32,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: bgColor,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-                  border: Border(bottom: BorderSide(color: borderColor, width: 3)),
+                    final isCurrentActive = !isAnswered && i == _ctrl.text.length;
+
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      width: 38,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: bgColor,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: borderColor,
+                          width: isCurrentActive ? 2.5 : 1.5,
+                        ),
+                        boxShadow: isCurrentActive
+                            ? [
+                                BoxShadow(
+                                  color: AppTheme.accentColor.withValues(alpha: 0.3),
+                                  blurRadius: 8,
+                                  spreadRadius: 1,
+                                )
+                              ]
+                            : null,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        displayChar,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: textColor,
+                        ),
+                      ),
+                    );
+                  }).toList(),
                 ),
-                alignment: Alignment.center,
-                child: Text(displayChar,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: textColor)),
-              );
-            }).toList(),
+              ),
+            ],
           ),
         ),
 
@@ -767,15 +972,21 @@ class _PracticeModeState extends State<_PracticeMode> {
             children: [
               TextButton.icon(
                 onPressed: _hints.length < widget.current.word.length - 1 ? _addHint : null,
-                icon: const Icon(Icons.lightbulb_outline, size: 16),
+                icon: const Icon(Icons.lightbulb_outline, size: 18),
                 label: Text('Gợi ý (${max(0, widget.current.word.length - 1 - _hints.length)})'),
                 style: TextButton.styleFrom(foregroundColor: AppTheme.accentColor),
               ),
-              SizedBox(
-                width: 110,
-                child: ElevatedButton(
-                  onPressed: _ctrl.text.trim().isEmpty ? null : _submit,
-                  child: const Text('Kiểm tra'),
+              ElevatedButton.icon(
+                onPressed: _ctrl.text.trim().isEmpty ? null : _submit,
+                icon: const Icon(Icons.check_rounded, size: 18),
+                label: const Text(
+                  'Kiểm tra',
+                  maxLines: 1,
+                  softWrap: false,
+                ),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(130, 44),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 ),
               ),
             ],

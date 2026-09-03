@@ -126,6 +126,72 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
 
+                  // ── Quick Access Row ──────────────────────────
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: InkWell(
+                              onTap: () => context.push('/my-lessons'),
+                              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.accentColor.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                                  border: Border.all(
+                                    color: AppTheme.accentColor.withValues(alpha: 0.3),
+                                    width: 0.8,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.folder_shared_outlined, color: AppTheme.accentColor, size: 20),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Bài học của tôi',
+                                      style: AppTheme.labelSm.copyWith(color: AppTheme.accentColor),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: InkWell(
+                              onTap: () => context.push('/srs-review'),
+                              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.warningColor.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                                  border: Border.all(
+                                    color: AppTheme.warningColor.withValues(alpha: 0.3),
+                                    width: 0.8,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.auto_awesome, color: AppTheme.warningColor, size: 20),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Ôn tập SRS',
+                                      style: AppTheme.labelSm.copyWith(color: AppTheme.warningColor),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
                   // ── Official Folders ──────────────────────────
                   if (state.officialFolders.isNotEmpty) ...[
                     SliverToBoxAdapter(

@@ -6,6 +6,7 @@ import 'package:simple_quizlet_mobile_app/presentation/blocs/auth/auth_bloc.dart
 import 'package:simple_quizlet_mobile_app/presentation/blocs/folder/folder_bloc.dart';
 import 'package:simple_quizlet_mobile_app/presentation/blocs/home/home_bloc.dart';
 import 'package:simple_quizlet_mobile_app/presentation/blocs/lesson/lesson_bloc.dart';
+import 'package:simple_quizlet_mobile_app/presentation/blocs/my_lessons/my_lessons_bloc.dart';
 import 'package:simple_quizlet_mobile_app/presentation/blocs/profile/profile_bloc.dart';
 import 'package:simple_quizlet_mobile_app/presentation/router/app_router.dart';
 
@@ -30,6 +31,9 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider<ProfileBloc>(
           create: (context) => injector<ProfileBloc>(),
+        ),
+        BlocProvider<MyLessonsBloc>(
+          create: (context) => injector<MyLessonsBloc>(),
         ),
       ],
       child: MaterialApp.router(

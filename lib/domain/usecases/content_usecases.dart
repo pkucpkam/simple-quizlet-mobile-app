@@ -45,3 +45,10 @@ class SearchLessonsUseCase {
 
   Future<List<LessonEntity>> call(String term) => _repository.searchLessons(term);
 }
+
+class GetMyLessonsUseCase {
+  final LessonRepository _repository;
+  GetMyLessonsUseCase(this._repository);
+
+  Future<List<LessonEntity>> call(String creator) => _repository.getMyLessons(creator);
+}

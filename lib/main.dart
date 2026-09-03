@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:simple_quizlet_mobile_app/app.dart';
 import 'package:simple_quizlet_mobile_app/core/di/injector.dart';
 import 'package:simple_quizlet_mobile_app/core/firebase/firebase_options.dart';
+import 'package:simple_quizlet_mobile_app/core/services/notification_scheduler.dart';
+import 'package:simple_quizlet_mobile_app/core/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,5 +17,13 @@ void main() async {
   // Initialize Dependency Injection
   await initInjector();
 
+  // Initialize local notifications
+  await NotificationService.instance.init();
+  await NotificationService.instance.requestPermission();
+
+  // Apply all saved notification schedules
+  await injector<NotificationScheduler>().applyAllSettings();
+
   runApp(const MyApp());
 }
+

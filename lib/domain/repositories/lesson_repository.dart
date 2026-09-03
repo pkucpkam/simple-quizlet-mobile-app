@@ -4,4 +4,5 @@ abstract class LessonRepository {
   Future<List<LessonEntity>> getPublicLessons();
   Future<LessonEntity> getLessonDetail(String lessonId);
   Future<List<LessonEntity>> searchLessons(String term);
+  Future<List<LessonEntity>> getMyLessons(String creator);
 }

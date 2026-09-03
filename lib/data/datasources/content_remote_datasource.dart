@@ -7,6 +7,7 @@ abstract class LessonRemoteDataSource {
   Future<List<LessonModel>> getPublicLessons();
   Future<LessonModel> getLessonDetail(String lessonId);
   Future<List<LessonModel>> searchLessons(String term);
+  Future<List<LessonModel>> getMyLessons(String creator);
 }
 
 class LessonRemoteDataSourceImpl implements LessonRemoteDataSource {
@@ -58,6 +59,16 @@ class LessonRemoteDataSourceImpl implements LessonRemoteDataSource {
             l.description.toLowerCase().contains(lower) ||
             l.creator.toLowerCase().contains(lower))
         .toList();
+  }
+
+  @override
+  Future<List<LessonModel>> getMyLessons(String creator) async {
+    final q = await _db
+        .collection('lessons')
+        .where('creator', isEqualTo: creator)
+        .orderBy('createdAt', descending: true)
+        .get();
+    return q.docs.map((doc) => LessonModel.fromFirestore(doc)).toList();
   }
 }
 

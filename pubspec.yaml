@@ -1,5 +1,5 @@
 name: simple_quizlet_mobile_app
-description: "Simple Quizlet - Ứng dụng học từ vựng tiếng Anh"
+description: "SimpleQuizlet - Ứng dụng học từ vựng tiếng Anh"
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -38,10 +38,26 @@ dependencies:
   # Fonts (Inter ≈ CircularSp for Spotify design)
   google_fonts: ^6.2.1
 
+  # Local Notifications
+  flutter_local_notifications: ^18.0.0
+  timezone: ^0.10.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "lib/assets/brain.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "lib/assets/brain.png"
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - lib/assets/

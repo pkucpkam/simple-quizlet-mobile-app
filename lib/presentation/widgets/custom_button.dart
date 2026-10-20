@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:simple_quizlet_mobile_app/core/theme/app_theme.dart';
 
 class CustomButton extends StatelessWidget {
   final String text;
@@ -17,7 +18,7 @@ class CustomButton extends StatelessWidget {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         minimumSize: const Size(double.infinity, 48),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusButton)),
       ),
       onPressed: isLoading ? null : onPressed,
       child:

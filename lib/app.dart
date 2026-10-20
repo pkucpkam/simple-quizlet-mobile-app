@@ -8,6 +8,7 @@ import 'package:simple_quizlet_mobile_app/presentation/blocs/home/home_bloc.dart
 import 'package:simple_quizlet_mobile_app/presentation/blocs/lesson/lesson_bloc.dart';
 import 'package:simple_quizlet_mobile_app/presentation/blocs/my_lessons/my_lessons_bloc.dart';
 import 'package:simple_quizlet_mobile_app/presentation/blocs/profile/profile_bloc.dart';
+import 'package:simple_quizlet_mobile_app/presentation/blocs/theme/theme_cubit.dart';
 import 'package:simple_quizlet_mobile_app/presentation/router/app_router.dart';
 
 class MyApp extends StatelessWidget {
@@ -17,6 +18,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider<ThemeCubit>(
+          create: (context) => injector<ThemeCubit>(),
+        ),
         BlocProvider<AuthBloc>(
           create: (context) => injector<AuthBloc>()..add(AuthCheckRequested()),
         ),
@@ -36,13 +40,17 @@ class MyApp extends StatelessWidget {
           create: (context) => injector<MyLessonsBloc>(),
         ),
       ],
-      child: MaterialApp.router(
-        title: 'Simple Quizlet',
-        theme: AppTheme.darkTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.dark,
-        routerConfig: appRouter,
-        debugShowCheckedModeBanner: false,
+      child: BlocBuilder<ThemeCubit, ThemeMode>(
+        builder: (context, themeMode) {
+          return MaterialApp.router(
+            title: 'Simple Quizlet',
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeMode,
+            routerConfig: appRouter,
+            debugShowCheckedModeBanner: false,
+          );
+        },
       ),
     );
   }

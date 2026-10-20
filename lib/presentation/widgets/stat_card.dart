@@ -17,38 +17,47 @@ class StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textCol = AppTheme.text(context);
+    final text2Col = AppTheme.text2(context);
+
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppTheme.surfaceColor,
-          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          boxShadow: AppTheme.shadowMedium,
+        decoration: AppTheme.cardDecoration(
+          context: context,
+          hasShadow: true,
+          hasBorder: true,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Icon badge
             Container(
-              width: 36,
-              height: 36,
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
+                color: AppTheme.isDark(context)
+                    ? const Color(0xFF242424)
+                    : color.withValues(alpha: 0.14),
                 borderRadius: BorderRadius.circular(AppTheme.radiusSm),
               ),
-              child: Center(child: Icon(icon, color: color, size: 18)),
+              child: Center(child: Icon(icon, color: color, size: 20)),
             ),
             const SizedBox(height: 12),
             Text(
               value,
-              style: AppTheme.displayMd.copyWith(fontSize: 22),
+              style: AppTheme.displayMd(context).copyWith(
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: textCol,
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 3),
             Text(
               title,
-              style: AppTheme.bodySm,
+              style: AppTheme.bodySm(context).copyWith(color: text2Col),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),

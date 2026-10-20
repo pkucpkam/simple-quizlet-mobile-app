@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:simple_quizlet_mobile_app/core/theme/app_theme.dart';
 import 'package:simple_quizlet_mobile_app/domain/entities/vocab_item_entity.dart';
 import 'package:simple_quizlet_mobile_app/presentation/blocs/lesson/lesson_bloc.dart';
+import 'package:simple_quizlet_mobile_app/presentation/widgets/pressable_scale.dart';
+import 'package:simple_quizlet_mobile_app/presentation/widgets/staggered_fade_slide.dart';
 
 class LessonPage extends StatefulWidget {
   final String lessonId;
@@ -22,20 +24,26 @@ class _LessonPageState extends State<LessonPage> {
 
   @override
   Widget build(BuildContext context) {
+    final bg = AppTheme.bg(context);
+    final accent = AppTheme.accent(context);
+    final textCol = AppTheme.text(context);
+    final text2Col = AppTheme.text2(context);
+    final text3Col = AppTheme.text3(context);
+
     return BlocBuilder<LessonBloc, LessonState>(
       builder: (context, state) {
         if (state is LessonLoading) {
           return Scaffold(
-            backgroundColor: AppTheme.bgColor,
-            appBar: AppBar(backgroundColor: AppTheme.bgColor),
-            body: const Center(child: CircularProgressIndicator()),
+            backgroundColor: bg,
+            appBar: AppBar(backgroundColor: bg),
+            body: Center(child: CircularProgressIndicator(color: accent)),
           );
         }
         if (state is LessonError) {
           return Scaffold(
-            backgroundColor: AppTheme.bgColor,
-            appBar: AppBar(backgroundColor: AppTheme.bgColor),
-            body: Center(child: Text('Lỗi: ${state.message}', style: AppTheme.bodyMd)),
+            backgroundColor: bg,
+            appBar: AppBar(backgroundColor: bg),
+            body: Center(child: Text('Lỗi: ${state.message}', style: AppTheme.bodyMd(context))),
           );
         }
         if (state is LessonLoaded) {
@@ -43,22 +51,23 @@ class _LessonPageState extends State<LessonPage> {
           final vocab = lesson.vocabulary ?? [];
 
           return Scaffold(
-            backgroundColor: AppTheme.bgColor,
+            backgroundColor: bg,
             body: CustomScrollView(
+              physics: const BouncingScrollPhysics(),
               slivers: [
                 // ── Gradient Header ───────────────────────────
                 SliverAppBar(
-                  expandedHeight: 210,
+                  expandedHeight: 220,
                   pinned: true,
-                  backgroundColor: AppTheme.bgColor,
+                  backgroundColor: bg,
                   leading: IconButton(
                     icon: Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: AppTheme.surface2Color.withValues(alpha: 0.85),
+                        color: AppTheme.surface2(context).withValues(alpha: 0.85),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.arrow_back_ios_new, size: 16, color: AppTheme.textColor),
+                      child: Icon(Icons.arrow_back_ios_new, size: 16, color: textCol),
                     ),
                     onPressed: () => context.pop(),
                   ),
@@ -70,12 +79,12 @@ class _LessonPageState extends State<LessonPage> {
                           end: Alignment.bottomCenter,
                           colors: lesson.isOfficial
                               ? [
-                                  AppTheme.accentColor.withValues(alpha: 0.18),
-                                  AppTheme.bgColor,
+                                  accent.withValues(alpha: 0.2),
+                                  bg,
                                 ]
                               : [
-                                  AppTheme.infoColor.withValues(alpha: 0.15),
-                                  AppTheme.bgColor,
+                                  AppTheme.infoColor.withValues(alpha: 0.18),
+                                  bg,
                                 ],
                         ),
                       ),
@@ -89,29 +98,28 @@ class _LessonPageState extends State<LessonPage> {
                               Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // Album art style icon
                                   Container(
-                                    width: 60,
-                                    height: 60,
+                                    width: 64,
+                                    height: 64,
                                     decoration: BoxDecoration(
                                       gradient: LinearGradient(
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
                                         colors: lesson.isOfficial
-                                            ? [
-                                                AppTheme.accentColor.withValues(alpha: 0.8),
-                                                AppTheme.accentDark,
-                                              ]
-                                            : [
-                                                AppTheme.infoColor.withValues(alpha: 0.8),
-                                                const Color(0xFF1D4ED8),
-                                              ],
+                                            ? [accent, AppTheme.accentDark]
+                                            : [AppTheme.infoColor, const Color(0xFF0284C7)],
                                       ),
                                       borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                                      boxShadow: AppTheme.shadowHeavy,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: (lesson.isOfficial ? accent : AppTheme.infoColor).withValues(alpha: 0.3),
+                                          blurRadius: 16,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
                                     ),
                                     child: const Center(
-                                      child: Icon(Icons.menu_book_rounded, color: Colors.white, size: 28),
+                                      child: Icon(Icons.menu_book_rounded, color: Colors.white, size: 30),
                                     ),
                                   ),
                                   const SizedBox(width: 16),
@@ -125,21 +133,27 @@ class _LessonPageState extends State<LessonPage> {
                                             child: Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                               decoration: AppTheme.pillDecoration(
-                                                background: AppTheme.accentColor.withValues(alpha: 0.15),
-                                                border: AppTheme.accentDark.withValues(alpha: 0.4),
+                                                context: context,
+                                                background: accent.withValues(alpha: 0.15),
+                                                border: accent.withValues(alpha: 0.4),
                                               ),
                                               child: Text(
                                                 'OFFICIAL',
-                                                style: AppTheme.labelSm.copyWith(
-                                                  color: AppTheme.accentColor,
+                                                style: AppTheme.labelSm(context).copyWith(
+                                                  color: accent,
                                                   fontSize: 9,
+                                                  fontWeight: FontWeight.w800,
                                                 ),
                                               ),
                                             ),
                                           ),
                                         Text(
                                           lesson.title,
-                                          style: AppTheme.titleLg,
+                                          style: AppTheme.titleLg(context).copyWith(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.w800,
+                                            color: textCol,
+                                          ),
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
                                         ),
@@ -148,12 +162,12 @@ class _LessonPageState extends State<LessonPage> {
                                           lesson.description.isEmpty
                                               ? 'Khám phá từ vựng tiếng Anh'
                                               : lesson.description,
-                                          style: AppTheme.bodyMd,
+                                          style: AppTheme.bodyMd(context).copyWith(color: text2Col),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                         const SizedBox(height: 4),
-                                        Text('by ${lesson.creator}', style: AppTheme.bodySm),
+                                        Text('by ${lesson.creator}', style: AppTheme.bodySm(context).copyWith(color: text3Col)),
                                       ],
                                     ),
                                   ),
@@ -161,17 +175,16 @@ class _LessonPageState extends State<LessonPage> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                                     decoration: BoxDecoration(
-                                      color: AppTheme.surface2Color,
+                                      color: AppTheme.isDark(context) ? const Color(0xFF242424) : AppTheme.surface2(context),
                                       borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                                      border: Border.all(color: AppTheme.borderColor, width: 0.8),
                                     ),
                                     child: Column(
                                       children: [
                                         Text(
                                           '${lesson.wordCount}',
-                                          style: AppTheme.displayMd.copyWith(fontSize: 24),
+                                          style: AppTheme.displayMd(context).copyWith(fontSize: 22, fontWeight: FontWeight.w800),
                                         ),
-                                        Text('từ', style: AppTheme.bodySm.copyWith(fontSize: 10)),
+                                        Text('từ', style: AppTheme.bodySm(context).copyWith(fontSize: 10)),
                                       ],
                                     ),
                                   ),
@@ -197,19 +210,26 @@ class _LessonPageState extends State<LessonPage> {
                           color: AppTheme.infoColor,
                           onTap: () => context.push('/study/${lesson.id}'),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 8),
                         _ActionButton(
                           label: 'ÔN TẬP',
                           icon: Icons.menu_book_outlined,
-                          color: AppTheme.accentColor,
+                          color: accent,
                           onTap: () => context.push('/review/${lesson.id}'),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 8),
                         _ActionButton(
                           label: 'THI',
                           icon: Icons.edit_note_outlined,
                           color: AppTheme.warningColor,
                           onTap: () => context.push('/test/${lesson.id}'),
+                        ),
+                        const SizedBox(width: 8),
+                        _ActionButton(
+                          label: 'MATCH',
+                          icon: Icons.bolt_rounded,
+                          color: const Color(0xFFF43F5E),
+                          onTap: () => context.push('/match/${lesson.id}'),
                         ),
                       ],
                     ),
@@ -222,7 +242,7 @@ class _LessonPageState extends State<LessonPage> {
                     padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
                     child: Text(
                       'TỪ VỰNG (${vocab.length})',
-                      style: AppTheme.labelMd,
+                      style: AppTheme.labelMd(context).copyWith(color: text2Col, fontWeight: FontWeight.w700),
                     ),
                   ),
                 ),
@@ -232,20 +252,23 @@ class _LessonPageState extends State<LessonPage> {
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final item = vocab[index];
-                      return Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                        child: _VocabItemCard(item: item, index: index),
+                      return StaggeredFadeSlide(
+                        index: index,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                          child: _VocabItemCard(item: item, index: index),
+                        ),
                       );
                     },
                     childCount: vocab.length,
                   ),
                 ),
-                const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                const SliverToBoxAdapter(child: SizedBox(height: 36)),
               ],
             ),
           );
         }
-        return const Scaffold();
+        return Scaffold(backgroundColor: bg);
       },
     );
   }
@@ -257,27 +280,42 @@ class _ActionButton extends StatelessWidget {
   final Color color;
   final VoidCallback onTap;
 
-  const _ActionButton({required this.label, required this.icon, required this.color, required this.onTap});
+  const _ActionButton({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+    final btnBg = isDark
+        ? const Color(0xFF242424)
+        : color.withValues(alpha: 0.12);
+    final fgColor = isDark ? Colors.white : color;
+
     return Expanded(
-      child: GestureDetector(
+      child: PressableScale(
         onTap: onTap,
+        scaleDown: 0.94,
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            border: Border.all(color: color.withValues(alpha: 0.25), width: 0.8),
+            color: btnBg,
+            borderRadius: BorderRadius.circular(AppTheme.radiusButton),
           ),
           child: Column(
             children: [
-              Icon(icon, color: color, size: 22),
+              Icon(icon, color: color, size: 24),
               const SizedBox(height: 6),
               Text(
                 label,
-                style: AppTheme.labelSm.copyWith(color: color, fontSize: 10),
+                style: AppTheme.labelSm(context).copyWith(
+                  color: fgColor,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ],
           ),
@@ -294,31 +332,40 @@ class _VocabItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accent = AppTheme.accent(context);
+    final textCol = AppTheme.text(context);
+    final text2Col = AppTheme.text2(context);
+
     return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: AppTheme.cardDecoration(hasShadow: false, hasBorder: true),
+      padding: const EdgeInsets.all(16),
+      decoration: AppTheme.cardDecoration(
+        context: context,
+        hasShadow: true,
+        hasBorder: true,
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Index badge
           Container(
-            width: 24,
-            height: 24,
+            width: 26,
+            height: 26,
             decoration: BoxDecoration(
-              color: AppTheme.accentColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(4),
+              color: accent.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(6),
             ),
             child: Center(
               child: Text(
                 '${index + 1}',
-                style: AppTheme.labelSm.copyWith(
-                  color: AppTheme.accentColor,
+                style: AppTheme.labelSm(context).copyWith(
+                  color: accent,
                   fontSize: 11,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,22 +374,27 @@ class _VocabItemCard extends StatelessWidget {
                   children: [
                     Text(
                       item.word,
-                      style: AppTheme.titleSm,
+                      style: AppTheme.titleSm(context).copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: textCol,
+                      ),
                     ),
                     if (item.wordType != null) ...[
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                         decoration: AppTheme.pillDecoration(
-                          background: AppTheme.warningColor.withValues(alpha: 0.1),
-                          border: AppTheme.warningColor.withValues(alpha: 0.3),
+                          context: context,
+                          background: AppTheme.warningColor.withValues(alpha: 0.12),
+                          border: AppTheme.warningColor.withValues(alpha: 0.35),
                         ),
                         child: Text(
                           item.wordType!,
-                          style: AppTheme.bodySm.copyWith(
+                          style: AppTheme.bodySm(context).copyWith(
                             color: AppTheme.warningColor,
                             fontSize: 10,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
@@ -351,42 +403,41 @@ class _VocabItemCard extends StatelessWidget {
                 ),
                 if (item.ipa != null)
                   Padding(
-                    padding: const EdgeInsets.only(top: 2),
+                    padding: const EdgeInsets.only(top: 3),
                     child: Text(
                       '/${item.ipa}/',
-                      style: AppTheme.bodySm.copyWith(
+                      style: AppTheme.bodySm(context).copyWith(
                         color: AppTheme.infoColor,
                         fontFamily: 'monospace',
-                        fontSize: 12,
+                        fontSize: 13,
                       ),
                     ),
                   ),
                 const SizedBox(height: 8),
-                Text(item.definition, style: AppTheme.bodyMd),
+                Text(item.definition, style: AppTheme.bodyMd(context).copyWith(color: text2Col)),
                 if (item.exampleEn != null)
                   Padding(
-                    padding: const EdgeInsets.only(top: 8),
+                    padding: const EdgeInsets.only(top: 10),
                     child: Container(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppTheme.surface2Color,
+                        color: AppTheme.isDark(context) ? const Color(0xFF202020) : AppTheme.surface2(context),
                         borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                        border: Border.all(color: AppTheme.borderColor, width: 0.5),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             '"${item.exampleEn}"',
-                            style: AppTheme.bodyMd.copyWith(
+                            style: AppTheme.bodyMd(context).copyWith(
                               fontStyle: FontStyle.italic,
-                              color: AppTheme.textColor,
+                              color: textCol,
                             ),
                           ),
                           if (item.exampleVi != null)
                             Padding(
                               padding: const EdgeInsets.only(top: 4),
-                              child: Text(item.exampleVi!, style: AppTheme.bodySm),
+                              child: Text(item.exampleVi!, style: AppTheme.bodySm(context)),
                             ),
                         ],
                       ),

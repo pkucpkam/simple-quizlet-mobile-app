@@ -7,6 +7,7 @@ import 'package:simple_quizlet_mobile_app/domain/entities/srs_card_entity.dart';
 import 'package:simple_quizlet_mobile_app/presentation/blocs/auth/auth_bloc.dart';
 import 'package:simple_quizlet_mobile_app/presentation/blocs/srs/srs_bloc.dart';
 import 'package:simple_quizlet_mobile_app/presentation/widgets/flip_card_widget.dart';
+import 'package:simple_quizlet_mobile_app/presentation/widgets/pressable_scale.dart';
 
 class SrsReviewPage extends StatelessWidget {
   final String? lessonId;
@@ -36,6 +37,9 @@ class _SrsReviewView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bg = AppTheme.bg(context);
+    final accent = AppTheme.accent(context);
+
     return BlocConsumer<SrsBloc, SrsState>(
       listener: (context, state) {
         if (state is SrsCatchupRequired) {
@@ -45,27 +49,30 @@ class _SrsReviewView extends StatelessWidget {
       builder: (context, state) {
         if (state is SrsLoading || state is SrsInitial) {
           return Scaffold(
-            backgroundColor: AppTheme.bgColor,
+            backgroundColor: bg,
             appBar: AppBar(
-              backgroundColor: AppTheme.bgColor,
-              title: const Text('Ôn tập SRS'),
+              backgroundColor: bg,
+              title: Text('Ôn tập SRS', style: AppTheme.titleSm(context)),
             ),
-            body: const Center(child: CircularProgressIndicator(color: AppTheme.accentColor)),
+            body: Center(child: CircularProgressIndicator(color: accent)),
           );
         }
 
         if (state is SrsError) {
           return Scaffold(
-            backgroundColor: AppTheme.bgColor,
-            appBar: AppBar(backgroundColor: AppTheme.bgColor, title: const Text('Ôn tập SRS')),
+            backgroundColor: bg,
+            appBar: AppBar(
+              backgroundColor: bg,
+              title: Text('Ôn tập SRS', style: AppTheme.titleSm(context)),
+            ),
             body: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline_rounded, color: AppTheme.errorColor, size: 48),
-                  const SizedBox(height: 12),
-                  Text('Lỗi: ${state.message}', style: AppTheme.bodyMd),
-                  const SizedBox(height: 16),
+                  const Icon(Icons.error_outline_rounded, color: AppTheme.errorColor, size: 52),
+                  const SizedBox(height: 14),
+                  Text('Lỗi: ${state.message}', style: AppTheme.bodyMd(context)),
+                  const SizedBox(height: 18),
                   ElevatedButton(
                     onPressed: () {
                       final authState = context.read<AuthBloc>().state;
@@ -89,7 +96,7 @@ class _SrsReviewView extends StatelessWidget {
           return _buildStudyScreen(context, state);
         }
 
-        return const Scaffold(backgroundColor: AppTheme.bgColor);
+        return Scaffold(backgroundColor: bg);
       },
     );
   }
@@ -97,7 +104,7 @@ class _SrsReviewView extends StatelessWidget {
   void _showCatchupModal(BuildContext context, SrsCatchupRequired state) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.surfaceColor,
+      backgroundColor: AppTheme.surface(context),
       isDismissible: false,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -113,18 +120,18 @@ class _SrsReviewView extends StatelessWidget {
                 children: [
                   const Icon(Icons.auto_awesome, color: AppTheme.warningColor, size: 24),
                   const SizedBox(width: 8),
-                  Text('Quá nhiều thẻ đến hạn!', style: AppTheme.titleLg),
+                  Text('Quá nhiều thẻ đến hạn!', style: AppTheme.titleLg(context)),
                 ],
               ),
               const SizedBox(height: 12),
               Text(
                 'Bạn có ${state.dueCards.length} thẻ cần ôn hôm nay. Bạn muốn chia nhỏ ra học trước hay ôn tất cả?',
-                style: AppTheme.bodyMd,
+                style: AppTheme.bodyMd(context),
               ),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
-                height: 48,
+                height: 50,
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.pop(modalCtx);
@@ -139,7 +146,7 @@ class _SrsReviewView extends StatelessWidget {
               const SizedBox(height: 10),
               SizedBox(
                 width: double.infinity,
-                height: 48,
+                height: 50,
                 child: OutlinedButton(
                   onPressed: () {
                     Navigator.pop(modalCtx);
@@ -159,123 +166,158 @@ class _SrsReviewView extends StatelessWidget {
   }
 
   Widget _buildStudyScreen(BuildContext context, SrsReady state) {
+    final bg = AppTheme.bg(context);
+    final accent = AppTheme.accent(context);
+    final textCol = AppTheme.text(context);
+    final surface3 = AppTheme.surface3(context);
+
     final card = state.currentCard;
     final total = state.totalInitialCount;
     final progress = total > 0 ? state.correctCount / total : 0.0;
 
     return Scaffold(
-      backgroundColor: AppTheme.bgColor,
+      backgroundColor: bg,
       appBar: AppBar(
-        backgroundColor: AppTheme.bgColor,
+        backgroundColor: bg,
         leading: IconButton(
-          icon: const Icon(Icons.close_rounded, size: 22),
+          icon: Icon(Icons.close_rounded, size: 24, color: textCol),
           onPressed: () => context.pop(),
         ),
         title: Text(
           'Còn lại ${state.queue.length} thẻ',
-          style: AppTheme.titleSm,
+          style: AppTheme.titleSm(context).copyWith(color: textCol, fontWeight: FontWeight.w700),
         ),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-        child: Column(
-          children: [
-            // Progress Bar
-            ClipRRect(
-              borderRadius: BorderRadius.circular(AppTheme.radiusPill),
-              child: LinearProgressIndicator(
-                value: progress,
-                backgroundColor: AppTheme.surface3Color,
-                valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.accentColor),
-                minHeight: 4,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+          child: Column(
+            children: [
+              // Progress Bar
+              ClipRRect(
+                borderRadius: BorderRadius.circular(AppTheme.radiusPill),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  backgroundColor: surface3,
+                  valueColor: AlwaysStoppedAnimation<Color>(accent),
+                  minHeight: 4,
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
+              const SizedBox(height: 12),
 
-            // Header Stats
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.check_circle_outline, color: AppTheme.successColor, size: 16),
-                    const SizedBox(width: 4),
-                    Text('${state.correctCount} đúng', style: AppTheme.bodySm.copyWith(color: AppTheme.successColor)),
-                  ],
-                ),
-                Row(
-                  children: [
-                    const Icon(Icons.highlight_off_rounded, color: AppTheme.errorColor, size: 16),
-                    const SizedBox(width: 4),
-                    Text('${state.incorrectCount} sai', style: AppTheme.bodySm.copyWith(color: AppTheme.errorColor)),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-
-            // Flip Card Widget
-            Expanded(
-              child: FlipCardWidget(
-                isFlipped: state.isFlipped,
-                onFlip: () => context.read<SrsBloc>().add(SrsFlipCard()),
-                front: _buildFrontContent(card),
-                back: _buildBackContent(card),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Controls / Ratings
-            if (!state.isFlipped)
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton.icon(
-                  onPressed: () => context.read<SrsBloc>().add(SrsFlipCard()),
-                  icon: const Icon(Icons.visibility_outlined, size: 20, color: Colors.black),
-                  label: Text('HIỆN ĐÁP ÁN', style: AppTheme.labelLg.copyWith(color: Colors.black)),
-                ),
-              )
-            else
+              // Header Stats
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _RatingButton(
-                    label: 'AGAIN',
-                    sub: '<1 phút',
-                    color: AppTheme.errorColor,
-                    onTap: () => context.read<SrsBloc>().add(SrsCardReviewed(ReviewRating.again)),
+                  Row(
+                    children: [
+                      Icon(Icons.check_circle_outline, color: accent, size: 16),
+                      const SizedBox(width: 5),
+                      Text(
+                        '${state.correctCount} đúng',
+                        style: AppTheme.bodySm(context).copyWith(color: accent, fontWeight: FontWeight.w600),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  _RatingButton(
-                    label: 'HARD',
-                    sub: 'Khó',
-                    color: const Color(0xFFF59E0B),
-                    onTap: () => context.read<SrsBloc>().add(SrsCardReviewed(ReviewRating.hard)),
-                  ),
-                  const SizedBox(width: 8),
-                  _RatingButton(
-                    label: 'GOOD',
-                    sub: 'Tốt',
-                    color: AppTheme.successColor,
-                    onTap: () => context.read<SrsBloc>().add(SrsCardReviewed(ReviewRating.good)),
-                  ),
-                  const SizedBox(width: 8),
-                  _RatingButton(
-                    label: 'EASY',
-                    sub: 'Dễ',
-                    color: const Color(0xFF3B82F6),
-                    onTap: () => context.read<SrsBloc>().add(SrsCardReviewed(ReviewRating.easy)),
+                  Row(
+                    children: [
+                      const Icon(Icons.highlight_off_rounded, color: AppTheme.errorColor, size: 16),
+                      const SizedBox(width: 5),
+                      Text(
+                        '${state.incorrectCount} sai',
+                        style: AppTheme.bodySm(context).copyWith(color: AppTheme.errorColor, fontWeight: FontWeight.w600),
+                      ),
+                    ],
                   ),
                 ],
               ),
-          ],
+              const SizedBox(height: 18),
+
+              // Flip Card Widget
+              Expanded(
+                child: FlipCardWidget(
+                  isFlipped: state.isFlipped,
+                  onFlip: () => context.read<SrsBloc>().add(SrsFlipCard()),
+                  front: _buildFrontContent(context, card),
+                  back: _buildBackContent(context, card),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Controls / Ratings
+              if (!state.isFlipped)
+                PressableScale(
+                  onTap: () => context.read<SrsBloc>().add(SrsFlipCard()),
+                  child: Container(
+                    width: double.infinity,
+                    height: 54,
+                    decoration: BoxDecoration(
+                      color: accent,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusButton),
+                      boxShadow: [
+                        BoxShadow(
+                          color: accent.withValues(alpha: 0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.visibility_outlined, size: 20, color: Colors.white),
+                          const SizedBox(width: 8),
+                          Text(
+                            'HIỆN ĐÁP ÁN',
+                            style: AppTheme.labelLg(context).copyWith(color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+              else
+                Row(
+                  children: [
+                    _RatingButton(
+                      label: 'AGAIN',
+                      sub: '<1 phút',
+                      color: AppTheme.errorColor,
+                      onTap: () => context.read<SrsBloc>().add(SrsCardReviewed(ReviewRating.again)),
+                    ),
+                    const SizedBox(width: 8),
+                    _RatingButton(
+                      label: 'HARD',
+                      sub: 'Khó',
+                      color: AppTheme.warningColor,
+                      onTap: () => context.read<SrsBloc>().add(SrsCardReviewed(ReviewRating.hard)),
+                    ),
+                    const SizedBox(width: 8),
+                    _RatingButton(
+                      label: 'GOOD',
+                      sub: 'Tốt',
+                      color: accent,
+                      onTap: () => context.read<SrsBloc>().add(SrsCardReviewed(ReviewRating.good)),
+                    ),
+                    const SizedBox(width: 8),
+                    _RatingButton(
+                      label: 'EASY',
+                      sub: 'Dễ',
+                      color: AppTheme.infoColor,
+                      onTap: () => context.read<SrsBloc>().add(SrsCardReviewed(ReviewRating.easy)),
+                    ),
+                  ],
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildFrontContent(SrsCardEntity card) {
+  Widget _buildFrontContent(BuildContext context, SrsCardEntity card) {
     return Padding(
       padding: const EdgeInsets.all(28),
       child: Column(
@@ -283,24 +325,24 @@ class _SrsReviewView extends StatelessWidget {
         children: [
           Text(
             card.word,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 32,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.textColor,
+              fontWeight: FontWeight.w800,
+              color: AppTheme.text(context),
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           Text(
             'Nhấn card để xem nghĩa',
-            style: AppTheme.bodySm.copyWith(color: AppTheme.text3Color),
+            style: AppTheme.bodySm(context).copyWith(color: AppTheme.text3(context)),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildBackContent(SrsCardEntity card) {
+  Widget _buildBackContent(BuildContext context, SrsCardEntity card) {
     return Padding(
       padding: const EdgeInsets.all(28),
       child: Column(
@@ -308,23 +350,23 @@ class _SrsReviewView extends StatelessWidget {
         children: [
           Text(
             card.definition,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w700,
-              color: AppTheme.textColor,
+              color: AppTheme.text(context),
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: AppTheme.surface2Color,
+              color: AppTheme.isDark(context) ? const Color(0xFF242424) : AppTheme.surface2(context),
               borderRadius: BorderRadius.circular(AppTheme.radiusSm),
             ),
             child: Text(
               'Streak: ${card.streak}🔥  •  Interval: ${card.interval} ngày',
-              style: AppTheme.bodySm,
+              style: AppTheme.bodySm(context).copyWith(color: AppTheme.text2(context)),
             ),
           ),
         ],
@@ -333,65 +375,51 @@ class _SrsReviewView extends StatelessWidget {
   }
 
   Widget _buildCompletion(BuildContext context, SrsCompleted state) {
+    final bg = AppTheme.bg(context);
+    final accent = AppTheme.accent(context);
     final pct = state.totalCards > 0 ? (state.correctCount / state.totalCards * 100).round() : 100;
 
     return Scaffold(
-      backgroundColor: AppTheme.bgColor,
-      appBar: AppBar(backgroundColor: AppTheme.bgColor, title: const Text('Hoàn thành SRS')),
+      backgroundColor: bg,
+      appBar: AppBar(
+        backgroundColor: bg,
+        title: Text('Hoàn thành SRS', style: AppTheme.titleSm(context)),
+      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(28),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                pct >= 80 ? '🎉' : '👍',
-                style: const TextStyle(fontSize: 64),
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: accent.withValues(alpha: 0.16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: accent.withValues(alpha: 0.25),
+                      blurRadius: 18,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '$pct%',
+                      style: AppTheme.displayLg(context).copyWith(color: accent),
+                    ),
+                    Text('chính xác', style: AppTheme.bodySm(context)),
+                  ],
+                ),
               ),
-              const SizedBox(height: 16),
-              Text('Hoàn thành ôn tập!', style: AppTheme.displayMd),
-              const SizedBox(height: 8),
-              Text('Bạn đã ôn ${state.totalCards} thẻ SRS', style: AppTheme.bodyMd),
               const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppTheme.successColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                        border: Border.all(color: AppTheme.successColor.withValues(alpha: 0.3)),
-                      ),
-                      child: Column(
-                        children: [
-                          Text('${state.correctCount}', style: AppTheme.displayMd.copyWith(color: AppTheme.successColor)),
-                          const SizedBox(height: 4),
-                          Text('ĐÚNG', style: AppTheme.labelSm.copyWith(color: AppTheme.successColor)),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppTheme.errorColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                        border: Border.all(color: AppTheme.errorColor.withValues(alpha: 0.3)),
-                      ),
-                      child: Column(
-                        children: [
-                          Text('${state.incorrectCount}', style: AppTheme.displayMd.copyWith(color: AppTheme.errorColor)),
-                          const SizedBox(height: 4),
-                          Text('CẦN ÔN LẠI', style: AppTheme.labelSm.copyWith(color: AppTheme.errorColor)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              Text('Đã ôn tập xong! 🎉', style: AppTheme.displayMd(context)),
+              const SizedBox(height: 8),
+              Text('Đã ôn ${state.totalCards} thẻ hôm nay.', style: AppTheme.bodyMd(context)),
               const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
@@ -425,23 +453,24 @@ class _RatingButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: GestureDetector(
+      child: PressableScale(
         onTap: onTap,
+        scaleDown: 0.94,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          constraints: const BoxConstraints(minHeight: 52),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
+            color: AppTheme.isDark(context) ? const Color(0xFF242424) : color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(AppTheme.radiusButton),
           ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 label,
                 style: TextStyle(
                   fontSize: 12,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w800,
                   color: color,
                 ),
               ),
@@ -450,7 +479,8 @@ class _RatingButton extends StatelessWidget {
                 sub,
                 style: TextStyle(
                   fontSize: 10,
-                  color: color.withValues(alpha: 0.8),
+                  fontWeight: FontWeight.w500,
+                  color: color.withValues(alpha: 0.85),
                 ),
               ),
             ],

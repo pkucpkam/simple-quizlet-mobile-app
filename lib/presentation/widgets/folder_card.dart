@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:simple_quizlet_mobile_app/core/theme/app_theme.dart';
 import 'package:simple_quizlet_mobile_app/domain/entities/folder_entity.dart';
+import 'package:simple_quizlet_mobile_app/presentation/widgets/pressable_scale.dart';
 
 class FolderCard extends StatelessWidget {
   final FolderEntity folder;
@@ -10,16 +11,21 @@ class FolderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = _parseColor(folder.color);
-    return GestureDetector(
+    final color = _parseColor(folder.color, context);
+    final textCol = AppTheme.text(context);
+    final text3Col = AppTheme.text3(context);
+
+    return PressableScale(
       onTap: onTap,
+      scaleDown: 0.95,
       child: Container(
-        decoration: BoxDecoration(
-          color: AppTheme.surfaceColor,
-          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          boxShadow: AppTheme.shadowMedium,
+        decoration: AppTheme.cardDecoration(
+          context: context,
+          hasShadow: true,
+          hasBorder: true,
+          radius: AppTheme.radiusMd,
         ),
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -28,9 +34,10 @@ class FolderCard extends StatelessWidget {
               width: 52,
               height: 52,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
+                color: AppTheme.isDark(context)
+                    ? const Color(0xFF242424)
+                    : color.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                border: Border.all(color: color.withValues(alpha: 0.2), width: 0.8),
               ),
               child: Center(
                 child: Text(
@@ -39,20 +46,27 @@ class FolderCard extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             Text(
               folder.name,
-              style: AppTheme.titleSm,
+              style: AppTheme.titleSm(context).copyWith(
+                color: textCol,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
             if (folder.lessonCount > 0)
               Padding(
-                padding: const EdgeInsets.only(top: 3),
+                padding: const EdgeInsets.only(top: 4),
                 child: Text(
                   '${folder.lessonCount} bài',
-                  style: AppTheme.bodySm,
+                  style: AppTheme.bodySm(context).copyWith(
+                    color: text3Col,
+                    fontSize: 11,
+                  ),
                 ),
               ),
           ],
@@ -61,12 +75,12 @@ class FolderCard extends StatelessWidget {
     );
   }
 
-  Color _parseColor(String colorStr) {
+  Color _parseColor(String colorStr, BuildContext context) {
     try {
       final hex = colorStr.replaceAll('#', '');
       return Color(int.parse('FF$hex', radix: 16));
     } catch (_) {
-      return AppTheme.accentColor;
+      return AppTheme.accent(context);
     }
   }
 }

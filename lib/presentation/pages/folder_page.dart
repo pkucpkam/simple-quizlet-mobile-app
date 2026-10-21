@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:simple_quizlet_mobile_app/core/theme/app_theme.dart';
 import 'package:simple_quizlet_mobile_app/presentation/blocs/folder/folder_bloc.dart';
 import 'package:simple_quizlet_mobile_app/presentation/widgets/lesson_card.dart';
+import 'package:simple_quizlet_mobile_app/presentation/widgets/staggered_fade_slide.dart';
 
 class FolderPage extends StatefulWidget {
   final String folderId;
@@ -22,35 +23,50 @@ class _FolderPageState extends State<FolderPage> {
 
   @override
   Widget build(BuildContext context) {
+    final bg = AppTheme.bg(context);
+    final accent = AppTheme.accent(context);
+    final textCol = AppTheme.text(context);
+    final text2Col = AppTheme.text2(context);
+
     return BlocBuilder<FolderBloc, FolderState>(
       builder: (context, state) {
         if (state is FolderLoading) {
           return Scaffold(
-            appBar: AppBar(),
-            body: const Center(child: CircularProgressIndicator(color: AppTheme.accentColor)),
+            backgroundColor: bg,
+            appBar: AppBar(backgroundColor: bg),
+            body: Center(child: CircularProgressIndicator(color: accent)),
           );
         }
         if (state is FolderError) {
           return Scaffold(
-            appBar: AppBar(),
-            body: Center(child: Text('Lỗi: ${state.message}', style: AppTheme.bodyMd)),
+            backgroundColor: bg,
+            appBar: AppBar(backgroundColor: bg),
+            body: Center(child: Text('Lỗi: ${state.message}', style: AppTheme.bodyMd(context))),
           );
         }
         if (state is FolderLoaded) {
           final folder = state.folder;
-          final color = _parseColor(folder.color);
+          final color = _parseColor(folder.color, context);
 
           return Scaffold(
+            backgroundColor: bg,
             body: CustomScrollView(
+              physics: const BouncingScrollPhysics(),
               slivers: [
                 // Header
                 SliverAppBar(
-                  expandedHeight: 160,
+                  expandedHeight: 170,
                   pinned: true,
-                  backgroundColor: AppTheme.surfaceColor,
+                  backgroundColor: bg,
                   leading: IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new, size: 18),
-                    color: AppTheme.textColor,
+                    icon: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surface2(context).withValues(alpha: 0.85),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.arrow_back_ios_new, size: 16, color: textCol),
+                    ),
                     onPressed: () => context.pop(),
                   ),
                   flexibleSpace: FlexibleSpaceBar(
@@ -60,8 +76,8 @@ class _FolderPageState extends State<FolderPage> {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            color.withValues(alpha: 0.15),
-                            AppTheme.bgColor,
+                            color.withValues(alpha: 0.2),
+                            bg,
                           ],
                         ),
                       ),
@@ -71,15 +87,16 @@ class _FolderPageState extends State<FolderPage> {
                           child: Row(
                             children: [
                               Container(
-                                width: 56,
-                                height: 56,
+                                width: 58,
+                                height: 58,
                                 decoration: BoxDecoration(
-                                  color: color.withValues(alpha: 0.2),
+                                  color: AppTheme.isDark(context)
+                                      ? const Color(0xFF242424)
+                                      : color.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                                  border: Border.all(color: color.withValues(alpha: 0.3)),
                                 ),
                                 child: Center(
-                                  child: Text(folder.icon, style: const TextStyle(fontSize: 26)),
+                                  child: Text(folder.icon, style: const TextStyle(fontSize: 28)),
                                 ),
                               ),
                               const SizedBox(width: 14),
@@ -88,22 +105,31 @@ class _FolderPageState extends State<FolderPage> {
                                   mainAxisSize: MainAxisSize.min,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(folder.name, style: AppTheme.titleLg),
+                                    Text(
+                                      folder.name,
+                                      style: AppTheme.titleLg(context).copyWith(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
                                     if (folder.description.isNotEmpty)
                                       Padding(
                                         padding: const EdgeInsets.only(top: 3),
                                         child: Text(
                                           folder.description,
-                                          style: AppTheme.bodyMd,
+                                          style: AppTheme.bodyMd(context).copyWith(color: text2Col),
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
                                     Padding(
-                                      padding: const EdgeInsets.only(top: 4),
+                                      padding: const EdgeInsets.only(top: 5),
                                       child: Text(
                                         '${state.lessons.length} bài học',
-                                        style: AppTheme.bodySm.copyWith(color: color),
+                                        style: AppTheme.bodySm(context).copyWith(
+                                          color: color,
+                                          fontWeight: FontWeight.w700,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -127,7 +153,7 @@ class _FolderPageState extends State<FolderPage> {
                           children: [
                             const Text('📂', style: TextStyle(fontSize: 48)),
                             const SizedBox(height: 12),
-                            Text('Thư mục chưa có bài học', style: AppTheme.bodyMd),
+                            Text('Thư mục chưa có bài học', style: AppTheme.bodyMd(context)),
                           ],
                         ),
                       ),
@@ -140,14 +166,17 @@ class _FolderPageState extends State<FolderPage> {
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
                           final lesson = state.lessons[index];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: LessonCard(
-                              lesson: lesson,
-                              onTap: () => context.push('/lesson/${lesson.id}'),
-                              onStudy: () => context.push('/study/${lesson.id}'),
-                              onReview: () => context.push('/review/${lesson.id}'),
-                              onTest: () => context.push('/test/${lesson.id}'),
+                          return StaggeredFadeSlide(
+                            index: index,
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: LessonCard(
+                                lesson: lesson,
+                                onTap: () => context.push('/lesson/${lesson.id}'),
+                                onStudy: () => context.push('/study/${lesson.id}'),
+                                onReview: () => context.push('/review/${lesson.id}'),
+                                onTest: () => context.push('/test/${lesson.id}'),
+                              ),
                             ),
                           );
                         },
@@ -159,17 +188,17 @@ class _FolderPageState extends State<FolderPage> {
             ),
           );
         }
-        return const Scaffold();
+        return Scaffold(backgroundColor: bg);
       },
     );
   }
 
-  Color _parseColor(String colorStr) {
+  Color _parseColor(String colorStr, BuildContext context) {
     try {
       final hex = colorStr.replaceAll('#', '');
       return Color(int.parse('FF$hex', radix: 16));
     } catch (_) {
-      return AppTheme.accentColor;
+      return AppTheme.accent(context);
     }
   }
 }

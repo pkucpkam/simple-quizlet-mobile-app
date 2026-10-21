@@ -33,8 +33,14 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final bg = AppTheme.bg(context);
+    final accent = AppTheme.accent(context);
+    final textCol = AppTheme.text(context);
+    final text2Col = AppTheme.text2(context);
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppTheme.bgColor,
+      backgroundColor: bg,
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
@@ -44,7 +50,13 @@ class _LoginPageState extends State<LoginPage> {
                 ? 'Email chưa được xác minh. Vui lòng kiểm tra hộp thư!'
                 : state.message;
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(msg)),
+              SnackBar(
+                content: Text(msg),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                ),
+              ),
             );
           }
         },
@@ -53,6 +65,7 @@ class _LoginPageState extends State<LoginPage> {
           return SafeArea(
             child: Center(
               child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: 28),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -62,13 +75,21 @@ class _LoginPageState extends State<LoginPage> {
                       width: 80,
                       height: 80,
                       decoration: BoxDecoration(
-                        color: AppTheme.surface2Color,
+                        color: isDarkMode ? const Color(0xFF242424) : AppTheme.surface2(context),
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppTheme.accentColor.withValues(alpha: 0.4),
-                          width: 1.5,
-                        ),
-                        boxShadow: AppTheme.shadowGreen,
+                        border: !isDarkMode
+                            ? Border.all(
+                                color: accent.withValues(alpha: 0.4),
+                                width: 1.5,
+                              )
+                            : null,
+                        boxShadow: [
+                          BoxShadow(
+                            color: accent.withValues(alpha: isDarkMode ? 0.12 : 0.25),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: const Center(
                         child: Text('📚', style: TextStyle(fontSize: 36)),
@@ -77,9 +98,20 @@ class _LoginPageState extends State<LoginPage> {
                     const SizedBox(height: 28),
 
                     // ── Heading ───────────────────────────────────
-                    Text('Simple Quizlet', style: AppTheme.displayMd),
+                    Text(
+                      'Simple Quizlet',
+                      style: AppTheme.displayMd(context).copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: textCol,
+                      ),
+                    ),
                     const SizedBox(height: 6),
-                    Text('Đăng nhập để tiếp tục', style: AppTheme.bodyMd),
+                    Text(
+                      'Đăng nhập để tiếp tục',
+                      style: AppTheme.bodyMd(context).copyWith(
+                        color: text2Col,
+                      ),
+                    ),
                     const SizedBox(height: 40),
 
                     // ── Form ──────────────────────────────────────
@@ -111,7 +143,7 @@ class _LoginPageState extends State<LoginPage> {
                                 _obscure
                                     ? Icons.visibility_off_outlined
                                     : Icons.visibility_outlined,
-                                color: AppTheme.text3Color,
+                                color: AppTheme.text3(context),
                                 size: 20,
                               ),
                               onPressed: () => setState(() => _obscure = !_obscure),
@@ -123,24 +155,36 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           const SizedBox(height: 28),
 
-                          // ── Primary CTA: Spotify Green pill ──────
+                          // ── Primary CTA: Pill ──────
                           SizedBox(
                             width: double.infinity,
                             height: 52,
                             child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: accent,
+                                foregroundColor: isDarkMode ? Colors.black : Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(AppTheme.radiusButton),
+                                ),
+                              ),
                               onPressed: loading ? null : _submit,
                               child: loading
-                                  ? const SizedBox(
+                                  ? SizedBox(
                                       width: 20,
                                       height: 20,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2.5,
-                                        color: Colors.black,
+                                        color: isDarkMode ? Colors.black : Colors.white,
                                       ),
                                     )
                                   : Text(
                                       'ĐĂNG NHẬP',
-                                      style: AppTheme.labelLg.copyWith(color: Colors.black),
+                                      style: AppTheme.labelLg(context).copyWith(
+                                        color: isDarkMode ? Colors.black : Colors.white,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 0.8,
+                                      ),
                                     ),
                             ),
                           ),
@@ -153,10 +197,16 @@ class _LoginPageState extends State<LoginPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('Chưa có tài khoản? ', style: AppTheme.bodyMd),
+                        Text('Chưa có tài khoản? ', style: AppTheme.bodyMd(context).copyWith(color: text2Col)),
                         TextButton(
                           onPressed: () => context.push('/register'),
-                          child: const Text('Đăng ký ngay'),
+                          child: Text(
+                            'Đăng ký ngay',
+                            style: TextStyle(
+                              color: accent,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -185,11 +235,13 @@ class _LoginPageState extends State<LoginPage> {
       keyboardType: keyboardType,
       obscureText: obscure,
       validator: validator,
-      style: AppTheme.bodyLg,
+      style: AppTheme.bodyLg(context),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        prefixIcon: Icon(icon, color: AppTheme.text3Color, size: 20),
+        labelStyle: TextStyle(color: AppTheme.text2(context)),
+        hintStyle: TextStyle(color: AppTheme.text3(context)),
+        prefixIcon: Icon(icon, color: AppTheme.text3(context), size: 20),
         suffixIcon: suffix,
       ),
     );

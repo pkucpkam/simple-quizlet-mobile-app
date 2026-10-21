@@ -8,6 +8,7 @@ abstract class AuthRemoteDataSource {
   Future<void> logout();
   Future<UserEntity?> getCurrentUser();
   Stream<UserEntity?> get authStateChanges;
+  bool get isAuthenticated;
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -15,6 +16,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final FirebaseFirestore _db;
 
   AuthRemoteDataSourceImpl(this._auth, this._db);
+
+  @override
+  bool get isAuthenticated => _auth.currentUser != null;
 
   @override
   Future<UserEntity> login(String email, String password) async {

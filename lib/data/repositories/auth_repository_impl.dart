@@ -22,4 +22,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Stream<UserEntity?> get authStateChanges => _dataSource.authStateChanges;
+
+  @override
+  bool get isAuthenticated => _dataSource.isAuthenticated;
 }

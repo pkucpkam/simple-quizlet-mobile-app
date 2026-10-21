@@ -40,6 +40,7 @@ import 'package:simple_quizlet_mobile_app/presentation/blocs/lesson/lesson_bloc.
 import 'package:simple_quizlet_mobile_app/presentation/blocs/my_lessons/my_lessons_bloc.dart';
 import 'package:simple_quizlet_mobile_app/presentation/blocs/profile/profile_bloc.dart';
 import 'package:simple_quizlet_mobile_app/presentation/blocs/srs/srs_bloc.dart';
+import 'package:simple_quizlet_mobile_app/presentation/blocs/theme/theme_cubit.dart';
 
 final GetIt injector = GetIt.instance;
 
@@ -165,6 +166,9 @@ Future<void> initInjector() async {
       endSession: injector(),
       incrementStats: injector(),
     ),
+  );
+  injector.registerLazySingleton(
+    () => ThemeCubit(injector()),
   );
 }
 

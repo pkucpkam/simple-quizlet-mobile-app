@@ -223,6 +223,7 @@ class _ReviewPageState extends State<ReviewPage> {
   Widget _buildCompletion() {
     final pct = _vocab.isEmpty ? 0 : (_correctCount / _queue.length * 100).round();
     final wrongCount = _queue.length - _correctCount;
+    final isDark = AppTheme.isDark(context);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Kết quả ôn tập')),
@@ -232,18 +233,18 @@ class _ReviewPageState extends State<ReviewPage> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(20),
-            color: AppTheme.surfaceColor,
+            color: isDark ? const Color(0xFF181818) : AppTheme.surfaceColor,
             child: Column(
               children: [
                 Text(pct >= 80 ? '🏆' : pct >= 50 ? '👍' : '📚',
                     style: const TextStyle(fontSize: 48)),
                 const SizedBox(height: 8),
                 Text('$pct%',
-                    style: AppTheme.displayLg.copyWith(
+                    style: AppTheme.displayLg(context).copyWith(
                         color: pct >= 80
                             ? AppTheme.successColor
                             : pct >= 50
-                                ? AppTheme.accentColor
+                                ? AppTheme.accent(context)
                                 : AppTheme.errorColor,
                         fontSize: 40)),
                 const SizedBox(height: 12),
@@ -255,9 +256,10 @@ class _ReviewPageState extends State<ReviewPage> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: AppTheme.successColor.withValues(alpha: 0.1),
+                        color: isDark
+                            ? const Color(0xFF132B1D)
+                            : AppTheme.successColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppTheme.successColor.withValues(alpha: 0.3)),
                       ),
                       child: Row(
                         children: [
@@ -273,9 +275,10 @@ class _ReviewPageState extends State<ReviewPage> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: AppTheme.errorColor.withValues(alpha: 0.1),
+                        color: isDark
+                            ? const Color(0xFF2A1619)
+                            : AppTheme.errorColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppTheme.errorColor.withValues(alpha: 0.3)),
                       ),
                       child: Row(
                         children: [
@@ -292,7 +295,7 @@ class _ReviewPageState extends State<ReviewPage> {
               ],
             ),
           ),
-          const Divider(height: 1),
+          if (!isDark) const Divider(height: 1),
 
           // Detail section header
           Padding(
@@ -327,14 +330,9 @@ class _ReviewPageState extends State<ReviewPage> {
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: _wrongVocab.isNotEmpty
-                        ? AppTheme.errorColor.withValues(alpha: 0.06)
-                        : AppTheme.surfaceColor,
+                        ? (isDark ? const Color(0xFF2A1619) : AppTheme.errorColor.withValues(alpha: 0.08))
+                        : (isDark ? const Color(0xFF242424) : AppTheme.surfaceColor),
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    border: Border.all(
-                      color: _wrongVocab.isNotEmpty
-                          ? AppTheme.errorColor.withValues(alpha: 0.2)
-                          : AppTheme.borderColor,
-                    ),
                   ),
                   child: Row(
                     children: [
@@ -373,9 +371,9 @@ class _ReviewPageState extends State<ReviewPage> {
           // Bottom Action Buttons
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              color: AppTheme.surfaceColor,
-              border: Border(top: BorderSide(color: AppTheme.borderColor)),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF181818) : AppTheme.surfaceColor,
+              border: !isDark ? const Border(top: BorderSide(color: AppTheme.borderColor)) : null,
             ),
             child: Column(
               children: [
@@ -387,6 +385,9 @@ class _ReviewPageState extends State<ReviewPage> {
                         icon: const Icon(Icons.refresh_rounded, size: 18),
                         label: const Text('Ôn lại tất cả'),
                         style: ElevatedButton.styleFrom(
+                          backgroundColor: isDark ? AppTheme.accent(context) : null,
+                          foregroundColor: isDark ? Colors.black : null,
+                          elevation: 0,
                           minimumSize: const Size(0, 46),
                           padding: const EdgeInsets.symmetric(vertical: 10),
                         ),
@@ -394,11 +395,14 @@ class _ReviewPageState extends State<ReviewPage> {
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: OutlinedButton.icon(
+                      child: ElevatedButton.icon(
                         onPressed: () => context.pushReplacement('/test/${widget.lessonId}'),
                         icon: const Icon(Icons.edit_outlined, size: 18),
                         label: const Text('Kiểm tra'),
-                        style: OutlinedButton.styleFrom(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isDark ? const Color(0xFF242424) : AppTheme.surface2Color,
+                          foregroundColor: isDark ? Colors.white : AppTheme.textColor,
+                          elevation: 0,
                           minimumSize: const Size(0, 46),
                           padding: const EdgeInsets.symmetric(vertical: 10),
                         ),
@@ -438,9 +442,8 @@ class _ModeBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
+        color: AppTheme.isDark(context) ? const Color(0xFF242424) : color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -465,20 +468,23 @@ class _QuestionBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final effectiveAccent = accentColor == AppTheme.accentColor ? AppTheme.accent(context) : accentColor;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: accentColor.withValues(alpha: 0.06),
+        color: AppTheme.isDark(context)
+            ? const Color(0xFF1E262B)
+            : effectiveAccent.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(color: accentColor.withValues(alpha: 0.25)),
+        boxShadow: AppTheme.shadow(context),
       ),
       child: Column(
         children: [
-          Text(label, style: AppTheme.labelMd.copyWith(color: accentColor)),
+          Text(label, style: AppTheme.labelMd(context).copyWith(color: effectiveAccent, fontWeight: FontWeight.w700)),
           const SizedBox(height: 12),
           Text(content,
-              style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: AppTheme.textColor),
+              style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: AppTheme.text(context)),
               textAlign: TextAlign.center),
           if (extra != null) ...[const SizedBox(height: 8), extra!],
         ],
@@ -503,51 +509,76 @@ class _OptionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final success = AppTheme.accent(context);
+    final error = AppTheme.errorColor;
+    final surface = AppTheme.surface(context);
+    final surface2 = AppTheme.surface2(context);
+    final borderCol = AppTheme.border(context);
+    final textCol = AppTheme.text(context);
+    final text3Col = AppTheme.text3(context);
+
     Color bgColor;
     Color borderColor;
     Color textColor;
 
     if (showResult) {
       if (isCorrect) {
-        bgColor = AppTheme.successColor.withValues(alpha: 0.1);
-        borderColor = AppTheme.successColor;
-        textColor = AppTheme.successColor;
+        bgColor = success.withValues(alpha: 0.15);
+        borderColor = success;
+        textColor = success;
       } else if (isSelected) {
-        bgColor = AppTheme.errorColor.withValues(alpha: 0.1);
-        borderColor = AppTheme.errorColor;
-        textColor = AppTheme.errorColor;
+        bgColor = error.withValues(alpha: 0.15);
+        borderColor = error;
+        textColor = error;
       } else {
-        bgColor = AppTheme.surface2Color;
-        borderColor = AppTheme.borderColor;
-        textColor = AppTheme.text3Color;
+        bgColor = surface2;
+        borderColor = borderCol;
+        textColor = text3Col;
       }
     } else {
-      bgColor = AppTheme.surfaceColor;
-      borderColor = AppTheme.borderColor;
-      textColor = AppTheme.textColor;
+      bgColor = surface;
+      borderColor = borderCol;
+      textColor = textCol;
+    }
+
+    final isDark = AppTheme.isDark(context);
+    Color effectiveBg = bgColor;
+    if (isDark) {
+      if (showResult && isCorrect) {
+        effectiveBg = const Color(0xFF143020);
+      } else if (showResult && isSelected && !isCorrect) {
+        effectiveBg = const Color(0xFF2E171B);
+      } else {
+        effectiveBg = const Color(0xFF242424);
+      }
     }
 
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: showResult ? null : onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        constraints: const BoxConstraints(minHeight: 52),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         decoration: BoxDecoration(
-          color: bgColor,
+          color: effectiveBg,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          border: Border.all(color: borderColor, width: showResult && (isCorrect || isSelected) ? 1.5 : 1),
+          border: (!isDark)
+              ? Border.all(color: borderColor, width: showResult && (isCorrect || isSelected) ? 1.8 : 1)
+              : null,
+          boxShadow: AppTheme.shadow(context),
         ),
         child: Row(
           children: [
             Expanded(
               child: Text(text,
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: textColor)),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: textColor)),
             ),
             if (showResult && isCorrect)
-              const Icon(Icons.check_circle, color: AppTheme.successColor, size: 18),
+              Icon(Icons.check_circle_rounded, color: success, size: 20),
             if (showResult && isSelected && !isCorrect)
-              const Icon(Icons.cancel, color: AppTheme.errorColor, size: 18),
+              Icon(Icons.cancel_rounded, color: error, size: 20),
           ],
         ),
       ),
@@ -563,12 +594,18 @@ class _NextButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 50,
+      height: 52,
       child: ElevatedButton(
         onPressed: onNext,
-        style: ElevatedButton.styleFrom(backgroundColor: AppTheme.surface2Color),
-        child: const Text('Từ tiếp theo →',
-            style: TextStyle(color: AppTheme.textColor, fontWeight: FontWeight.w600)),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppTheme.accent(context),
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusButton),
+          ),
+        ),
+        child: Text('TỪ TIẾP THEO →',
+            style: AppTheme.labelLg(context).copyWith(color: Colors.white, fontWeight: FontWeight.w700)),
       ),
     );
   }
@@ -802,7 +839,6 @@ class _PracticeModeState extends State<_PracticeMode> {
 
   @override
   Widget build(BuildContext context) {
-    final wordChars = widget.current.word.split('');
     final isAnswered = widget.answered;
 
     return Column(
@@ -820,90 +856,122 @@ class _PracticeModeState extends State<_PracticeMode> {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppTheme.surfaceColor,
+            color: AppTheme.isDark(context) ? const Color(0xFF181818) : AppTheme.surface(context),
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            border: Border.all(color: AppTheme.borderColor),
+            boxShadow: AppTheme.shadow(context),
           ),
           child: Column(
             children: [
-              Text('Gõ từ tiếng Anh:', style: AppTheme.labelMd),
+              Text('Gõ từ tiếng Anh:', style: AppTheme.labelMd(context)),
               const SizedBox(height: 14),
               GestureDetector(
                 onTap: () => _focus.requestFocus(),
-                child: Wrap(
-                  alignment: WrapAlignment.center,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 8,
-                  runSpacing: 10,
-                  children: wordChars.asMap().entries.map((e) {
-                    final i = e.key;
-                    final char = e.value;
-                    final isSpace = char == ' ';
-                    final isRevealed = _hints.contains(i);
-                    final userChar = i < _ctrl.text.length ? _ctrl.text[i] : '';
-                    final displayChar = userChar.isNotEmpty ? userChar : (isRevealed ? char : '');
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final words = widget.current.word.split(' ');
+                    int globalCharIndex = 0;
 
-                    Color borderColor = AppTheme.borderColor;
-                    Color textColor = AppTheme.textColor;
-                    Color bgColor = AppTheme.surface2Color;
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: words.map((word) {
+                        final chars = word.split('');
+                        final count = chars.length;
+                        final spacing = count > 10 ? 4.0 : (count > 6 ? 6.0 : 8.0);
+                        final totalSpacing = (count - 1) * spacing;
+                        final availableWidth = constraints.maxWidth - totalSpacing;
+                        final rawSlotWidth = (availableWidth / count).floorToDouble();
+                        final slotWidth = rawSlotWidth.clamp(18.0, 38.0);
+                        final slotHeight = (slotWidth * 1.25).clamp(30.0, 48.0);
+                        final fontSize = (slotWidth * 0.52).clamp(12.0, 18.0);
 
-                    if (isAnswered) {
-                      if (_isCorrect == true) {
-                        borderColor = AppTheme.successColor;
-                        textColor = AppTheme.successColor;
-                        bgColor = AppTheme.successColor.withValues(alpha: 0.12);
-                      } else {
-                        borderColor = AppTheme.errorColor;
-                        textColor = AppTheme.errorColor;
-                        bgColor = AppTheme.errorColor.withValues(alpha: 0.12);
-                      }
-                    } else if (i == _ctrl.text.length) {
-                      borderColor = AppTheme.accentColor;
-                      bgColor = AppTheme.accentColor.withValues(alpha: 0.08);
-                    } else if (isRevealed && userChar.isEmpty) {
-                      borderColor = const Color(0xFFF59E0B);
-                      textColor = const Color(0xFFB45309);
-                      bgColor = const Color(0xFFFEF3C7);
-                    }
+                        final wordWidgets = <Widget>[];
 
-                    if (isSpace) {
-                      return const SizedBox(width: 14);
-                    }
+                        for (int i = 0; i < count; i++) {
+                          final charIndex = globalCharIndex++;
+                          final char = chars[i];
+                          final isRevealed = _hints.contains(charIndex);
+                          final userChar = charIndex < _ctrl.text.length ? _ctrl.text[charIndex] : '';
+                          final displayChar =
+                              userChar.isNotEmpty ? userChar : (isRevealed ? char : '');
 
-                    final isCurrentActive = !isAnswered && i == _ctrl.text.length;
+                          Color borderColor = AppTheme.border(context);
+                          Color textColor = AppTheme.text(context);
+                          Color bgColor = AppTheme.surface2(context);
 
-                    return AnimatedContainer(
-                      duration: const Duration(milliseconds: 150),
-                      width: 38,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: bgColor,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: borderColor,
-                          width: isCurrentActive ? 2.5 : 1.5,
-                        ),
-                        boxShadow: isCurrentActive
-                            ? [
-                                BoxShadow(
-                                  color: AppTheme.accentColor.withValues(alpha: 0.3),
-                                  blurRadius: 8,
-                                  spreadRadius: 1,
-                                )
-                              ]
-                            : null,
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        displayChar,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: textColor,
-                        ),
-                      ),
+                          if (isAnswered) {
+                            if (_isCorrect == true) {
+                              borderColor = AppTheme.successColor;
+                              textColor = AppTheme.successColor;
+                              bgColor = AppTheme.successColor.withValues(alpha: 0.12);
+                            } else {
+                              borderColor = AppTheme.errorColor;
+                              textColor = AppTheme.errorColor;
+                              bgColor = AppTheme.errorColor.withValues(alpha: 0.12);
+                            }
+                          } else if (charIndex == _ctrl.text.length) {
+                            borderColor = AppTheme.accentColor;
+                            bgColor = AppTheme.accentColor.withValues(alpha: 0.08);
+                          } else if (isRevealed && userChar.isEmpty) {
+                            borderColor = const Color(0xFFF59E0B);
+                            textColor = const Color(0xFFB45309);
+                            bgColor = const Color(0xFFFEF3C7);
+                          }
+
+                          final isCurrentActive = !isAnswered && charIndex == _ctrl.text.length;
+                          final isDarkMode = AppTheme.isDark(context);
+
+                          wordWidgets.add(
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 150),
+                              width: slotWidth,
+                              height: slotHeight,
+                              decoration: BoxDecoration(
+                                color: bgColor,
+                                borderRadius: BorderRadius.circular(slotWidth > 30 ? 8 : 6),
+                                border: (!isDarkMode || isCurrentActive || isAnswered)
+                                    ? Border.all(
+                                        color: borderColor,
+                                        width: isCurrentActive ? 2.0 : 1.2,
+                                      )
+                                    : null,
+                                boxShadow: isCurrentActive
+                                    ? [
+                                        BoxShadow(
+                                          color: AppTheme.accentColor.withValues(alpha: 0.3),
+                                          blurRadius: 8,
+                                          spreadRadius: 1,
+                                        )
+                                      ]
+                                    : null,
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                displayChar,
+                                style: TextStyle(
+                                  fontSize: fontSize,
+                                  fontWeight: FontWeight.w700,
+                                  color: textColor,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+
+                        // Account for the space character between words
+                        globalCharIndex++;
+
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: spacing,
+                            runSpacing: 6,
+                            children: wordWidgets,
+                          ),
+                        );
+                      }).toList(),
                     );
-                  }).toList(),
+                  },
                 ),
               ),
             ],
@@ -936,10 +1004,10 @@ class _PracticeModeState extends State<_PracticeMode> {
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: (_isCorrect! ? AppTheme.successColor : AppTheme.errorColor).withValues(alpha: 0.1),
+              color: AppTheme.isDark(context)
+                  ? (_isCorrect! ? const Color(0xFF143020) : const Color(0xFF2E171B))
+                  : (_isCorrect! ? AppTheme.successColor : AppTheme.errorColor).withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              border: Border.all(
-                  color: (_isCorrect! ? AppTheme.successColor : AppTheme.errorColor).withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [

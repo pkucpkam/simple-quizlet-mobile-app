@@ -131,6 +131,7 @@ class _TestPageState extends State<TestPage> {
 
         final current = _queue[_currentIndex];
         final progress = _currentIndex / _queue.length;
+        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
         return Scaffold(
           appBar: AppBar(
@@ -149,35 +150,36 @@ class _TestPageState extends State<TestPage> {
                 children: [
                   // Progress
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusPill),
                     child: LinearProgressIndicator(
                       value: progress,
-                      backgroundColor: AppTheme.surface2Color,
-                      valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.accentColor),
-                      minHeight: 5,
+                      backgroundColor: AppTheme.surface2(context),
+                      valueColor: AlwaysStoppedAnimation<Color>(AppTheme.accent(context)),
+                      minHeight: 4,
                     ),
                   ),
                   const SizedBox(height: 24),
 
                   // Prompt
-                  Text('Nghĩa tiếng Việt:', style: AppTheme.labelMd),
+                  Text('Nghĩa tiếng Việt:', style: AppTheme.labelMd(context)),
                   const SizedBox(height: 12),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(22),
                     decoration: BoxDecoration(
-                      color: AppTheme.surfaceColor,
+                      color: isDarkMode ? const Color(0xFF181818) : AppTheme.surface(context),
                       borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                      border: Border.all(color: AppTheme.borderColor),
+                      border: !isDarkMode ? Border.all(color: AppTheme.border(context)) : null,
+                      boxShadow: isDarkMode ? null : AppTheme.shadow(context),
                     ),
                     child: Column(
                       children: [
                         Text(
                           current.definition,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.w700,
-                            color: AppTheme.textColor,
+                            color: AppTheme.text(context),
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -186,14 +188,14 @@ class _TestPageState extends State<TestPage> {
                   ),
                   const SizedBox(height: 20),
 
-                  Text('Nhập từ tiếng Anh:', style: AppTheme.labelMd),
+                  Text('Nhập từ tiếng Anh:', style: AppTheme.labelMd(context)),
                   const SizedBox(height: 8),
 
                   // Input
                   TextField(
                     controller: _answerCtrl,
                     focusNode: _focusNode,
-                    style: AppTheme.bodyLg,
+                    style: AppTheme.bodyLg(context),
                     enabled: !_submitted,
                     textCapitalization: TextCapitalization.none,
                     onSubmitted: (_) => _submit(),
@@ -201,28 +203,32 @@ class _TestPageState extends State<TestPage> {
                       hintText: 'Nhập từ tiếng Anh...',
                       filled: true,
                       fillColor: _submitted
-                          ? (_isCorrect! ? AppTheme.successColor.withValues(alpha: 0.08) : AppTheme.errorColor.withValues(alpha: 0.08))
-                          : AppTheme.surface2Color,
+                          ? (_isCorrect!
+                              ? (isDarkMode ? const Color(0xFF143020) : AppTheme.accent(context).withValues(alpha: 0.1))
+                              : (isDarkMode ? const Color(0xFF2E171B) : AppTheme.errorColor.withValues(alpha: 0.1)))
+                          : (isDarkMode ? const Color(0xFF242424) : AppTheme.surface2(context)),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                        borderSide: BorderSide(
-                          color: _submitted
-                              ? (_isCorrect! ? AppTheme.successColor : AppTheme.errorColor)
-                              : AppTheme.borderColor,
-                        ),
+                        borderSide: isDarkMode
+                            ? BorderSide.none
+                            : BorderSide(
+                                color: _submitted
+                                    ? (_isCorrect! ? AppTheme.accent(context) : AppTheme.errorColor)
+                                    : AppTheme.border(context),
+                              ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                        borderSide: const BorderSide(color: AppTheme.borderColor),
+                        borderSide: isDarkMode ? BorderSide.none : BorderSide(color: AppTheme.border(context)),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                        borderSide: const BorderSide(color: AppTheme.accentColor, width: 1.5),
+                        borderSide: BorderSide(color: AppTheme.accent(context), width: 1.8),
                       ),
                       suffixIcon: _submitted
                           ? Icon(
-                              _isCorrect! ? Icons.check_circle : Icons.cancel,
-                              color: _isCorrect! ? AppTheme.successColor : AppTheme.errorColor,
+                              _isCorrect! ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                              color: _isCorrect! ? AppTheme.accent(context) : AppTheme.errorColor,
                             )
                           : null,
                     ),
@@ -235,16 +241,17 @@ class _TestPageState extends State<TestPage> {
                       duration: const Duration(milliseconds: 200),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: (_isCorrect!
-                                ? AppTheme.successColor
-                                : AppTheme.errorColor)
-                            .withValues(alpha: 0.1),
+                        color: _isCorrect!
+                            ? (isDarkMode ? const Color(0xFF143020) : AppTheme.successColor.withValues(alpha: 0.1))
+                            : (isDarkMode ? const Color(0xFF2E171B) : AppTheme.errorColor.withValues(alpha: 0.1)),
                         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                        border: Border.all(
-                          color: (_isCorrect!
-                              ? AppTheme.successColor
-                              : AppTheme.errorColor).withValues(alpha: 0.3),
-                        ),
+                        border: !isDarkMode
+                            ? Border.all(
+                                color: (_isCorrect!
+                                    ? AppTheme.successColor
+                                    : AppTheme.errorColor).withValues(alpha: 0.3),
+                              )
+                            : null,
                       ),
                       child: Row(
                         children: [
@@ -271,9 +278,9 @@ class _TestPageState extends State<TestPage> {
                                   children: [
                                     Text(
                                       current.word,
-                                      style: AppTheme.bodyLg.copyWith(
+                                      style: AppTheme.bodyLg(context).copyWith(
                                         fontWeight: FontWeight.bold,
-                                        color: AppTheme.textColor,
+                                        color: AppTheme.text(context),
                                       ),
                                     ),
                                     if (current.ipa != null) ...[
@@ -306,7 +313,15 @@ class _TestPageState extends State<TestPage> {
                       height: 50,
                       child: ElevatedButton(
                         onPressed: _submit,
-                        child: const Text('Kiểm tra'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.accent(context),
+                          foregroundColor: isDarkMode ? Colors.black : Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppTheme.radiusButton),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text('Kiểm tra', style: TextStyle(fontWeight: FontWeight.w700)),
                       ),
                     )
                   else
@@ -316,10 +331,16 @@ class _TestPageState extends State<TestPage> {
                       child: ElevatedButton(
                         onPressed: _next,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.surface2Color,
+                          backgroundColor: isDarkMode ? const Color(0xFF242424) : AppTheme.surface2Color,
+                          foregroundColor: isDarkMode ? Colors.white : AppTheme.textColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppTheme.radiusButton),
+                          ),
+                          elevation: 0,
                         ),
                         child: Text(
                           _currentIndex < _queue.length - 1 ? 'Từ tiếp theo →' : 'Xem kết quả',
+                          style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                       ),
                     ),
@@ -336,6 +357,7 @@ class _TestPageState extends State<TestPage> {
     final pct = _vocab.isEmpty ? 0 : (_correctCount / _queue.length * 100).round();
     final wrongCount = _queue.length - _correctCount;
     final filteredResults = _showWrongOnly ? _results.where((r) => !r.isCorrect).toList() : _results;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Kết quả kiểm tra')),
@@ -345,18 +367,18 @@ class _TestPageState extends State<TestPage> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(20),
-            color: AppTheme.surfaceColor,
+            color: isDarkMode ? const Color(0xFF181818) : AppTheme.surfaceColor,
             child: Column(
               children: [
                 Text(pct >= 80 ? '🏆' : pct >= 50 ? '👍' : '📚',
                     style: const TextStyle(fontSize: 48)),
                 const SizedBox(height: 8),
                 Text('$pct%',
-                    style: AppTheme.displayLg.copyWith(
+                    style: AppTheme.displayLg(context).copyWith(
                         color: pct >= 80
                             ? AppTheme.successColor
                             : pct >= 50
-                                ? AppTheme.accentColor
+                                ? AppTheme.accent(context)
                                 : AppTheme.errorColor,
                         fontSize: 40)),
                 const SizedBox(height: 12),
@@ -368,9 +390,9 @@ class _TestPageState extends State<TestPage> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: AppTheme.successColor.withValues(alpha: 0.1),
+                        color: isDarkMode ? const Color(0xFF132B1D) : AppTheme.successColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppTheme.successColor.withValues(alpha: 0.3)),
+                        border: !isDarkMode ? Border.all(color: AppTheme.successColor.withValues(alpha: 0.3)) : null,
                       ),
                       child: Row(
                         children: [
@@ -386,9 +408,9 @@ class _TestPageState extends State<TestPage> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: AppTheme.errorColor.withValues(alpha: 0.1),
+                        color: isDarkMode ? const Color(0xFF2A1619) : AppTheme.errorColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppTheme.errorColor.withValues(alpha: 0.3)),
+                        border: !isDarkMode ? Border.all(color: AppTheme.errorColor.withValues(alpha: 0.3)) : null,
                       ),
                       child: Row(
                         children: [
@@ -405,7 +427,7 @@ class _TestPageState extends State<TestPage> {
               ],
             ),
           ),
-          const Divider(height: 1),
+          if (!isDarkMode) const Divider(height: 1),
 
           // Filter bar
           Padding(
@@ -413,17 +435,21 @@ class _TestPageState extends State<TestPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Chi tiết câu hỏi', style: AppTheme.labelMd.copyWith(fontWeight: FontWeight.bold)),
+                Text('Chi tiết câu hỏi', style: AppTheme.labelMd(context).copyWith(fontWeight: FontWeight.bold)),
                 Row(
                   children: [
                     ChoiceChip(
                       label: Text('Tất cả (${_results.length})'),
                       selected: !_showWrongOnly,
                       onSelected: (_) => setState(() => _showWrongOnly = false),
-                      selectedColor: AppTheme.accentColor.withValues(alpha: 0.2),
+                      selectedColor: isDarkMode ? AppTheme.accent(context) : AppTheme.accentColor.withValues(alpha: 0.2),
+                      backgroundColor: isDarkMode ? const Color(0xFF242424) : null,
+                      side: BorderSide.none,
                       labelStyle: TextStyle(
                         fontSize: 12,
-                        color: !_showWrongOnly ? AppTheme.accentColor : AppTheme.textColor,
+                        color: !_showWrongOnly
+                            ? (isDarkMode ? Colors.black : AppTheme.accentColor)
+                            : AppTheme.text(context),
                         fontWeight: !_showWrongOnly ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
@@ -432,10 +458,14 @@ class _TestPageState extends State<TestPage> {
                       label: Text('Từ sai ($wrongCount)'),
                       selected: _showWrongOnly,
                       onSelected: (_) => setState(() => _showWrongOnly = true),
-                      selectedColor: AppTheme.errorColor.withValues(alpha: 0.2),
+                      selectedColor: isDarkMode ? AppTheme.errorColor : AppTheme.errorColor.withValues(alpha: 0.2),
+                      backgroundColor: isDarkMode ? const Color(0xFF242424) : null,
+                      side: BorderSide.none,
                       labelStyle: TextStyle(
                         fontSize: 12,
-                        color: _showWrongOnly ? AppTheme.errorColor : AppTheme.textColor,
+                        color: _showWrongOnly
+                            ? (isDarkMode ? Colors.white : AppTheme.errorColor)
+                            : AppTheme.text(context),
                         fontWeight: _showWrongOnly ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
@@ -451,7 +481,7 @@ class _TestPageState extends State<TestPage> {
                 ? Center(
                     child: Text(
                       _showWrongOnly ? 'Chúc mừng! Bạn không làm sai từ nào 🎉' : 'Chưa có dữ liệu',
-                      style: AppTheme.bodyMd,
+                      style: AppTheme.bodyMd(context),
                     ),
                   )
                 : ListView.builder(
@@ -464,14 +494,16 @@ class _TestPageState extends State<TestPage> {
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
                           color: r.isCorrect
-                              ? AppTheme.successColor.withValues(alpha: 0.06)
-                              : AppTheme.errorColor.withValues(alpha: 0.06),
+                              ? (isDarkMode ? const Color(0xFF143020) : AppTheme.successColor.withValues(alpha: 0.06))
+                              : (isDarkMode ? const Color(0xFF2E171B) : AppTheme.errorColor.withValues(alpha: 0.06)),
                           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                          border: Border.all(
-                            color: r.isCorrect
-                                ? AppTheme.successColor.withValues(alpha: 0.2)
-                                : AppTheme.errorColor.withValues(alpha: 0.2),
-                          ),
+                          border: !isDarkMode
+                              ? Border.all(
+                                  color: r.isCorrect
+                                      ? AppTheme.successColor.withValues(alpha: 0.2)
+                                      : AppTheme.errorColor.withValues(alpha: 0.2),
+                                )
+                              : null,
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -488,12 +520,12 @@ class _TestPageState extends State<TestPage> {
                                 children: [
                                   Text(
                                     r.definition,
-                                    style: AppTheme.titleMd.copyWith(fontSize: 15),
+                                    style: AppTheme.titleMd(context).copyWith(fontSize: 15),
                                   ),
                                   const SizedBox(height: 4),
                                   RichText(
                                     text: TextSpan(
-                                      style: AppTheme.bodyMd,
+                                      style: AppTheme.bodyMd(context),
                                       children: [
                                         const TextSpan(text: 'Đáp án đúng: '),
                                         TextSpan(
@@ -510,7 +542,7 @@ class _TestPageState extends State<TestPage> {
                                     const SizedBox(height: 2),
                                     RichText(
                                       text: TextSpan(
-                                        style: AppTheme.bodyMd,
+                                        style: AppTheme.bodyMd(context),
                                         children: [
                                           const TextSpan(text: 'Bạn đã nhập: '),
                                           TextSpan(
@@ -537,9 +569,9 @@ class _TestPageState extends State<TestPage> {
           // Bottom Bar
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              color: AppTheme.surfaceColor,
-              border: Border(top: BorderSide(color: AppTheme.borderColor)),
+            decoration: BoxDecoration(
+              color: isDarkMode ? const Color(0xFF181818) : AppTheme.surfaceColor,
+              border: !isDarkMode ? const Border(top: BorderSide(color: AppTheme.borderColor)) : null,
             ),
             child: Row(
               children: [
@@ -549,17 +581,23 @@ class _TestPageState extends State<TestPage> {
                     icon: const Icon(Icons.refresh_rounded, size: 18),
                     label: const Text('Làm lại'),
                     style: ElevatedButton.styleFrom(
+                      backgroundColor: isDarkMode ? AppTheme.accent(context) : null,
+                      foregroundColor: isDarkMode ? Colors.black : null,
+                      elevation: 0,
                       minimumSize: const Size(0, 48),
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: OutlinedButton.icon(
+                  child: ElevatedButton.icon(
                     onPressed: () => context.pop(),
                     icon: const Icon(Icons.check_rounded, size: 18),
                     label: const Text('Hoàn thành'),
-                    style: OutlinedButton.styleFrom(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isDarkMode ? const Color(0xFF242424) : AppTheme.surface2Color,
+                      foregroundColor: isDarkMode ? Colors.white : AppTheme.textColor,
+                      elevation: 0,
                       minimumSize: const Size(0, 48),
                     ),
                   ),

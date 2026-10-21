@@ -15,19 +15,42 @@ import 'package:simple_quizlet_mobile_app/presentation/pages/profile_page.dart';
 import 'package:simple_quizlet_mobile_app/presentation/pages/my_lessons_page.dart';
 import 'package:simple_quizlet_mobile_app/presentation/pages/srs_review_page.dart';
 import 'package:simple_quizlet_mobile_app/presentation/pages/notification_settings_page.dart';
+import 'package:simple_quizlet_mobile_app/presentation/pages/match_rush_page.dart';
+
+import 'dart:async';
+
+class GoRouterRefreshStream extends ChangeNotifier {
+  GoRouterRefreshStream(Stream<dynamic> stream) {
+    _subscription = stream.asBroadcastStream().listen((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+    });
+  }
+
+  late final StreamSubscription<dynamic> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
-  redirect: (BuildContext context, GoRouterState state) async {
+  refreshListenable: GoRouterRefreshStream(injector<AuthRepository>().authStateChanges),
+  redirect: (BuildContext context, GoRouterState state) {
     final authRepo = injector<AuthRepository>();
-    final user = await authRepo.getCurrentUser();
-    final loggingIn = state.matchedLocation == '/login' || state.matchedLocation == '/register';
+    final isLoggedIn = authRepo.isAuthenticated;
+    final isAuthRoute =
+        state.matchedLocation == '/login' || state.matchedLocation == '/register';
 
-    if (user == null) {
-      return loggingIn ? null : '/login';
+    if (!isLoggedIn) {
+      return isAuthRoute ? null : '/login';
     }
 
-    if (loggingIn) {
+    if (isAuthRoute) {
       return '/';
     }
 
@@ -97,6 +120,16 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/notification-settings',
       builder: (context, state) => const NotificationSettingsPage(),
+    ),
+    GoRoute(
+      path: '/match',
+      builder: (context, state) => const MatchRushPage(),
+    ),
+    GoRoute(
+      path: '/match/:id',
+      builder: (context, state) => MatchRushPage(
+        lessonId: state.pathParameters['id'],
+      ),
     ),
   ],
 );

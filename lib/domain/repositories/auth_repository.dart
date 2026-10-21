@@ -6,4 +6,5 @@ abstract class AuthRepository {
   Future<void> logout();
   Future<UserEntity?> getCurrentUser();
   Stream<UserEntity?> get authStateChanges;
+  bool get isAuthenticated;
 }
